@@ -1,53 +1,50 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Plus, Calendar, FileText, Users, Brain } from "lucide-react";
+import { BookOpen, Calendar, FileText, Users, Brain, Loader2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import UserMenu from "@/components/UserMenu";
+import AddCourseDialog from "@/components/AddCourseDialog";
+import { useCourses } from "@/hooks/useCourses";
+import { useNavigate } from "react-router-dom";
 
 const Courses = () => {
-  const courses = [
-    {
-      id: 1,
-      name: "Advanced Physics",
-      code: "PHYS 301",
-      color: "bg-blue-500",
-      progress: 65,
-      nextDeadline: "Assignment due in 2 days",
-      materials: 12,
-      assignments: 3
-    },
-    {
-      id: 2,
-      name: "Calculus III", 
-      code: "MATH 203",
-      color: "bg-green-500",
-      progress: 80,
-      nextDeadline: "Quiz in 5 days",
-      materials: 8,
-      assignments: 2
-    },
-    {
-      id: 3,
-      name: "Modern History",
-      code: "HIST 250", 
-      color: "bg-purple-500",
-      progress: 45,
-      nextDeadline: "Essay due next week",
-      materials: 15,
-      assignments: 1
-    },
-    {
-      id: 4,
-      name: "Computer Science",
-      code: "CS 101",
-      color: "bg-orange-500", 
-      progress: 90,
-      nextDeadline: "Project due in 10 days",
-      materials: 20,
-      assignments: 4
-    }
-  ];
+  const { courses, isLoading, createCourse, isCreating } = useCourses();
+  const navigate = useNavigate();
+
+  const handleAddCourse = (courseData: {
+    name: string;
+    code: string;
+    description?: string;
+    color: string;
+  }) => {
+    createCourse(courseData);
+  };
+
+  const handleAskAI = (courseId: string, courseName: string) => {
+    // Navigate to AI Tutor with course context
+    navigate('/ai-tutor', { 
+      state: { 
+        courseId, 
+        courseName,
+        context: `I'm working on ${courseName}. Help me with questions related to this course.`
+      } 
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex">
+        <Navigation />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Loading courses...</span>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -64,10 +61,7 @@ const Courses = () => {
               <h1 className="text-xl font-semibold text-gray-900">Academic Aura</h1>
             </div>
             <div className="flex items-center space-x-4">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Add Course
-              </Button>
+              <AddCourseDialog onAddCourse={handleAddCourse} isCreating={isCreating} />
               <UserMenu />
             </div>
           </div>
@@ -79,68 +73,81 @@ const Courses = () => {
             <p className="text-gray-600">Manage your courses, track progress, and access AI-powered features.</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <Card key={course.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className={`w-3 h-3 ${course.color} rounded-full`}></div>
-                      <div>
-                        <CardTitle className="text-lg font-semibold">{course.name}</CardTitle>
-                        <p className="text-sm text-gray-500">{course.code}</p>
+          {courses.length === 0 ? (
+            <div className="text-center py-12">
+              <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No courses yet</h3>
+              <p className="text-gray-500 mb-6">Get started by adding your first course.</p>
+              <AddCourseDialog onAddCourse={handleAddCourse} isCreating={isCreating} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {courses.map((course) => (
+                <Card key={course.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+                  <CardHeader className="pb-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-3 h-3 ${course.color} rounded-full`}></div>
+                        <div>
+                          <CardTitle className="text-lg font-semibold">{course.name}</CardTitle>
+                          <p className="text-sm text-gray-500">{course.code}</p>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                  
-                  {/* Progress Bar */}
-                  <div className="mt-4">
-                    <div className="flex justify-between text-sm text-gray-600 mb-1">
-                      <span>Progress</span>
-                      <span>{course.progress}%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`${course.color} h-2 rounded-full`}
-                        style={{ width: `${course.progress}%` }}
-                      ></div>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      {course.nextDeadline}
                     </div>
                     
-                    <div className="flex justify-between text-sm">
-                      <div className="flex items-center text-gray-600">
-                        <FileText className="h-4 w-4 mr-1" />
-                        {course.materials} materials
+                    {/* Progress Bar */}
+                    <div className="mt-4">
+                      <div className="flex justify-between text-sm text-gray-600 mb-1">
+                        <span>Progress</span>
+                        <span>{course.progress || 0}%</span>
                       </div>
-                      <div className="flex items-center text-gray-600">
-                        <Users className="h-4 w-4 mr-1" />
-                        {course.assignments} assignments
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`${course.color} h-2 rounded-full`}
+                          style={{ width: `${course.progress || 0}%` }}
+                        ></div>
                       </div>
                     </div>
+                  </CardHeader>
 
-                    <div className="flex space-x-2 pt-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        <BookOpen className="h-4 w-4 mr-1" />
-                        View
-                      </Button>
-                      <Button size="sm" className="flex-1">
-                        <Brain className="h-4 w-4 mr-1" />
-                        Ask AI
-                      </Button>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex items-center text-sm text-gray-600">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        {course.nextDeadline}
+                      </div>
+                      
+                      <div className="flex justify-between text-sm">
+                        <div className="flex items-center text-gray-600">
+                          <FileText className="h-4 w-4 mr-1" />
+                          {course.materialCount} materials
+                        </div>
+                        <div className="flex items-center text-gray-600">
+                          <Users className="h-4 w-4 mr-1" />
+                          {course.assignmentCount} assignments
+                        </div>
+                      </div>
+
+                      <div className="flex space-x-2 pt-2">
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <BookOpen className="h-4 w-4 mr-1" />
+                          View
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          className="flex-1"
+                          onClick={() => handleAskAI(course.id, course.name)}
+                        >
+                          <Brain className="h-4 w-4 mr-1" />
+                          Ask AI
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
 
           {/* Quick Actions */}
           <div className="mt-8">

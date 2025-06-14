@@ -1,5 +1,6 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,11 +13,29 @@ import { useGeminiChat } from '@/hooks/useGeminiChat';
 const AITutor = () => {
   const [inputMessage, setInputMessage] = useState('');
   const { messages, isLoading, sendMessage, clearMessages } = useGeminiChat();
+  const location = useLocation();
+  
+  // Get course context from navigation state
+  const courseContext = location.state as { courseId?: string; courseName?: string; context?: string } | null;
+
+  useEffect(() => {
+    // If we have course context and no messages yet, send a greeting
+    if (courseContext && messages.length === 0) {
+      const greeting = `Hello! I'm here to help you with ${courseContext.courseName}. What would you like to know or work on?`;
+      // We don't automatically send this as a message, just show it as context
+    }
+  }, [courseContext, messages.length]);
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
     
-    const context = "You are an AI tutor helping students with their academic questions. Be helpful, encouraging, and provide clear explanations.";
+    let context = "You are an AI tutor helping students with their academic questions. Be helpful, encouraging, and provide clear explanations.";
+    
+    // Add course-specific context if available
+    if (courseContext) {
+      context += ` The student is currently working on ${courseContext.courseName}. Tailor your responses to be relevant to this course when appropriate.`;
+    }
+    
     await sendMessage(inputMessage, context);
     setInputMessage('');
   };
@@ -40,7 +59,12 @@ const AITutor = () => {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Brain className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-xl font-semibold text-gray-900">AI Tutor</h1>
+              <div>
+                <h1 className="text-xl font-semibold text-gray-900">AI Tutor</h1>
+                {courseContext && (
+                  <p className="text-sm text-gray-500">Currently helping with: {courseContext.courseName}</p>
+                )}
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <Button variant="outline" onClick={clearMessages} disabled={messages.length === 0}>
@@ -56,7 +80,10 @@ const AITutor = () => {
           <div className="max-w-4xl mx-auto">
             <div className="mb-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">AI-Powered Learning Assistant</h2>
-              <p className="text-gray-600">Ask questions about your studies and get intelligent, personalized help.</p>
+              <p className="text-gray-600">
+                Ask questions about your studies and get intelligent, personalized help.
+                {courseContext && ` Currently focused on ${courseContext.courseName}.`}
+              </p>
             </div>
 
             <Card className="h-[600px] flex flex-col">
@@ -64,6 +91,11 @@ const AITutor = () => {
                 <CardTitle className="flex items-center">
                   <Brain className="h-5 w-5 mr-2" />
                   Chat with AI Tutor (Powered by Gemini 2.0 Flash)
+                  {courseContext && (
+                    <span className="ml-2 text-sm font-normal text-gray-500">
+                      - {courseContext.courseName}
+                    </span>
+                  )}
                 </CardTitle>
               </CardHeader>
               
@@ -73,7 +105,12 @@ const AITutor = () => {
                     {messages.length === 0 ? (
                       <div className="text-center text-gray-500 py-8">
                         <Brain className="h-12 w-12 mx-auto mb-4 text-gray-300" />
-                        <p>Start a conversation with your AI tutor!</p>
+                        <p>
+                          {courseContext 
+                            ? `Ready to help you with ${courseContext.courseName}!`
+                            : 'Start a conversation with your AI tutor!'
+                          }
+                        </p>
                         <p className="text-sm mt-2">Ask questions about any subject, request explanations, or get study tips.</p>
                       </div>
                     ) : (
@@ -116,7 +153,11 @@ const AITutor = () => {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
-                    placeholder="Ask your AI tutor anything..."
+                    placeholder={
+                      courseContext 
+                        ? `Ask about ${courseContext.courseName}...`
+                        : "Ask your AI tutor anything..."
+                    }
                     disabled={isLoading}
                     className="flex-1"
                   />
