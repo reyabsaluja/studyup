@@ -1,8 +1,19 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Calendar, FileText, Brain, ArrowLeft, Plus, Loader2, Download, Eye, Trash2 } from "lucide-react";
+import { BookOpen, Calendar, FileText, Brain, ArrowLeft, Plus, Loader2, Download, Eye, Trash2, Edit, Check, X } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
 import Navigation from "@/components/Navigation";
 import UserMenu from "@/components/UserMenu";
 import { useCourses } from "@/hooks/useCourses";
@@ -10,15 +21,32 @@ import { useAssignments } from "@/hooks/useAssignments";
 import { useCourseMaterials } from "@/hooks/useCourseMaterials";
 import AddAssignmentDialog from "@/components/AddAssignmentDialog";
 import AddMaterialDialog from "@/components/AddMaterialDialog";
+import EditAssignmentDialog from "@/components/EditAssignmentDialog";
 
 const CoursePage = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { courses, isLoading: coursesLoading } = useCourses();
-  const { assignments, isLoading: assignmentsLoading, createAssignment, isCreating } = useAssignments(courseId || '');
+  const { 
+    assignments, 
+    isLoading: assignmentsLoading, 
+    createAssignment, 
+    isCreating,
+    updateAssignment,
+    isUpdating,
+    deleteAssignment,
+    isDeleting,
+    toggleAssignmentCompletion,
+    isTogglingCompletion
+  } = useAssignments(courseId || '');
   const { materials, isLoading: materialsLoading, uploadMaterial, deleteMaterial, isUploading } = useCourseMaterials(courseId || '');
 
   const course = courses.find(c => c.id === courseId);
+
+  // Calculate progress based on completed assignments
+  const completedAssignments = assignments?.filter(a => a.completed).length || 0;
+  const totalAssignments = assignments?.length || 0;
+  const calculatedProgress = totalAssignments > 0 ? Math.round((completedAssignments / totalAssignments) * 100) : 0;
 
   const handleAddAssignment = (assignmentData: {
     title: string;
@@ -31,6 +59,25 @@ const CoursePage = () => {
         course_id: courseId
       });
     }
+  };
+
+  const handleUpdateAssignment = (updates: {
+    id: string;
+    updates: {
+      title: string;
+      description?: string;
+      due_date?: string;
+    };
+  }) => {
+    updateAssignment(updates);
+  };
+
+  const handleDeleteAssignment = (assignment: any) => {
+    deleteAssignment(assignment);
+  };
+
+  const handleToggleCompletion = (assignment: any) => {
+    toggleAssignmentCompletion(assignment);
   };
 
   const handleAddMaterial = (materialData: {
@@ -145,7 +192,7 @@ const CoursePage = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-600">Assignments</p>
                     <p className="text-2xl font-bold text-gray-900">{assignments?.length || 0}</p>
-                    <p className="text-xs text-gray-500">Total assignments</p>
+                    <p className="text-xs text-gray-500">{completedAssignments} completed</p>
                   </div>
                   <FileText className="h-8 w-8 text-blue-600" />
                 </div>
@@ -170,7 +217,7 @@ const CoursePage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Progress</p>
-                    <p className="text-2xl font-bold text-gray-900">{course.progress || 0}%</p>
+                    <p className="text-2xl font-bold text-gray-900">{calculatedProgress}%</p>
                     <p className="text-xs text-gray-500">Course completion</p>
                   </div>
                   <div className={`w-8 h-8 ${course.color} rounded-full opacity-80`}></div>
@@ -207,19 +254,60 @@ const CoursePage = () => {
                     {assignments.map((assignment) => (
                       <div key={assignment.id} className="p-4 border rounded-lg">
                         <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h4 className="font-semibold text-gray-900">{assignment.title}</h4>
-                            {assignment.description && (
-                              <p className="text-sm text-gray-600 mt-1">{assignment.description}</p>
-                            )}
-                            {assignment.due_date && (
-                              <div className="flex items-center mt-2 text-sm text-gray-500">
-                                <Calendar className="h-4 w-4 mr-1" />
-                                Due: {new Date(assignment.due_date).toLocaleDateString()}
-                              </div>
-                            )}
+                          <div className="flex items-start space-x-3 flex-1">
+                            <Checkbox
+                              checked={assignment.completed || false}
+                              onCheckedChange={() => handleToggleCompletion(assignment)}
+                              disabled={isTogglingCompletion}
+                            />
+                            <div className="flex-1">
+                              <h4 className={`font-semibold ${assignment.completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
+                                {assignment.title}
+                              </h4>
+                              {assignment.description && (
+                                <p className={`text-sm mt-1 ${assignment.completed ? 'text-gray-400' : 'text-gray-600'}`}>
+                                  {assignment.description}
+                                </p>
+                              )}
+                              {assignment.due_date && (
+                                <div className={`flex items-center mt-2 text-sm ${assignment.completed ? 'text-gray-400' : 'text-gray-500'}`}>
+                                  <Calendar className="h-4 w-4 mr-1" />
+                                  Due: {new Date(assignment.due_date).toLocaleDateString()}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className={`w-3 h-3 rounded-full ${assignment.completed ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
+                          <div className="flex items-center space-x-2 ml-4">
+                            <EditAssignmentDialog
+                              assignment={assignment}
+                              onUpdateAssignment={handleUpdateAssignment}
+                              isUpdating={isUpdating}
+                            />
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <Trash2 className="h-4 w-4 text-red-500" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Delete Assignment</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete "{assignment.title}"? This action cannot be undone.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteAssignment(assignment)}
+                                    className="bg-red-500 hover:bg-red-600"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                          </div>
                         </div>
                       </div>
                     ))}
