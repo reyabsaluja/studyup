@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import CoursePage from "./pages/CoursePage";
 import Notebook from "./pages/Notebook";
+import Planner from "./pages/Planner";
+import Upload from "./pages/Upload";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AITutor from "./pages/AITutor";
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:courseId" element={<CoursePage />} />
             <Route path="/notebook" element={<Notebook />} />
+            <Route path="/planner" element={<Planner />} />
+            <Route path="/upload" element={<Upload />} />
             <Route path="/ai-tutor" element={<AITutor />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
