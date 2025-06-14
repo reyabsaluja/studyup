@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -308,7 +307,7 @@ const Upload = () => {
                                 <Button 
                                   variant="ghost" 
                                   size="sm"
-                                  onClick={() => deleteMaterial(material.id)}
+                                  onClick={() => deleteMaterial(material)}
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
