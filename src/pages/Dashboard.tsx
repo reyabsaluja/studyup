@@ -62,18 +62,18 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors">
+    <div className="min-h-screen bg-background flex transition-colors">
       <Navigation />
       
       <main className="flex-1">
         {/* Header */}
-        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 transition-colors">
+        <header className="bg-card border-b border-border px-6 py-4 transition-colors">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
                 <Brain className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Taski</h1>
+              <h1 className="text-xl font-semibold text-foreground">Taski</h1>
             </div>
             <div className="flex items-center space-x-3">
               <ThemeToggle />
@@ -84,8 +84,8 @@ const Dashboard = () => {
 
         <div className="p-6">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Welcome back!</h2>
-            <p className="text-gray-600 dark:text-gray-400">Here's what you've accomplished and what's coming up.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Welcome back!</h2>
+            <p className="text-muted-foreground">Here's what you've accomplished and what's coming up.</p>
           </div>
 
           {/* Stats Grid */}
@@ -93,13 +93,13 @@ const Dashboard = () => {
             {statsData.map((stat) => {
               const Icon = stat.icon;
               return (
-                <Card key={stat.title} className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all duration-200">
+                <Card key={stat.title} className="bg-card border-border hover:shadow-lg transition-all duration-200">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.title}</p>
-                        <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
-                        <p className="text-xs text-gray-500 dark:text-gray-500">{stat.description}</p>
+                        <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
+                        <p className="text-2xl font-bold text-foreground">{stat.value}</p>
+                        <p className="text-xs text-muted-foreground">{stat.description}</p>
                       </div>
                       <Icon className={`h-8 w-8 ${stat.color}`} />
                     </div>
@@ -111,13 +111,13 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Quick Actions */}
-            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-gray-900 dark:text-white">Quick Actions</CardTitle>
+                <CardTitle className="text-foreground">Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Button 
-                  className="w-full justify-start bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600" 
+                  className="w-full justify-start bg-card text-foreground border-border hover:bg-accent hover:text-accent-foreground" 
                   variant="outline"
                   onClick={() => navigate("/courses")}
                 >
@@ -125,19 +125,19 @@ const Dashboard = () => {
                   View All Courses
                 </Button>
                 <Button 
-                  className="w-full justify-start bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600" 
+                  className="w-full justify-start bg-card text-foreground border-border hover:bg-accent hover:text-accent-foreground" 
                   variant="outline"
                   onClick={() => navigate("/notebook")}
                 >
                   <FileText className="h-4 w-4 mr-2" />
                   Create New Note
                 </Button>
-                <Button className="w-full justify-start bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600" variant="outline">
+                <Button className="w-full justify-start bg-card text-foreground border-border hover:bg-accent hover:text-accent-foreground" variant="outline">
                   <Calendar className="h-4 w-4 mr-2" />
                   Plan Study Session
                 </Button>
                 <Button 
-                  className="w-full justify-start bg-white dark:bg-gray-700 text-gray-900 dark:text-white border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600" 
+                  className="w-full justify-start bg-card text-foreground border-border hover:bg-accent hover:text-accent-foreground" 
                   variant="outline"
                   onClick={() => navigate("/ai-tutor")}
                 >
@@ -148,21 +148,21 @@ const Dashboard = () => {
             </Card>
 
             {/* Recent Activity */}
-            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+            <Card className="bg-card border-border">
               <CardHeader>
-                <CardTitle className="text-gray-900 dark:text-white">Recent Activity</CardTitle>
+                <CardTitle className="text-foreground">Recent Activity</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {activitiesLoading ? (
-                    <div className="text-sm text-gray-500 dark:text-gray-400">Loading activities...</div>
+                    <div className="text-sm text-muted-foreground">Loading activities...</div>
                   ) : activities.length > 0 ? (
                     activities.map((activity) => (
                       <div key={activity.id} className="flex items-start space-x-3">
                         <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
                         <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900 dark:text-white">{activity.activity_description}</p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                          <p className="text-sm font-medium text-foreground">{activity.activity_description}</p>
+                          <p className="text-xs text-muted-foreground">
                             {activity.related_course_name && `${activity.related_course_name} • `}
                             {formatActivityTime(activity.created_at)}
                           </p>
@@ -170,7 +170,7 @@ const Dashboard = () => {
                       </div>
                     ))
                   ) : (
-                    <div className="text-sm text-gray-500 dark:text-gray-400">No recent activity. Start by creating a course or assignment!</div>
+                    <div className="text-sm text-muted-foreground">No recent activity. Start by creating a course or assignment!</div>
                   )}
                 </div>
               </CardContent>
@@ -178,14 +178,14 @@ const Dashboard = () => {
           </div>
 
           {/* AI Features */}
-          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-blue-200 dark:border-blue-800">
+          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/50 dark:to-purple-950/50 border-blue-200 dark:border-blue-800/50">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
                     Unlock AI-Powered Learning
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-300 mb-4">
+                  <p className="text-muted-foreground mb-4">
                     Get personalized study plans, instant help, and smart insights to boost your academic performance.
                   </p>
                   <Button onClick={() => navigate("/ai-tutor")} className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">

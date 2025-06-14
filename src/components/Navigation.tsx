@@ -24,7 +24,7 @@ const Navigation = () => {
   };
 
   return (
-    <aside className="w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 min-h-screen p-6 transition-colors">
+    <aside className="w-64 bg-card border-r border-border min-h-screen p-6 transition-colors">
       <nav className="space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -34,8 +34,8 @@ const Navigation = () => {
               variant={isActive(item.path) ? "default" : "ghost"}
               className={`w-full justify-start transition-colors ${
                 isActive(item.path) 
-                  ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900 font-medium" 
-                  : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  ? "bg-primary text-primary-foreground font-medium" 
+                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
               }`}
               onClick={() => navigate(item.path)}
             >
