@@ -1,33 +1,30 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Brain, Upload, MessageSquare, Settings } from "lucide-react";
+import { Brain, Upload, MessageSquare } from "lucide-react";
 import Navigation from "@/components/Navigation";
+import UserMenu from "@/components/UserMenu";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center">
-            <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
-          </div>
-          <div className="flex items-center space-x-4">
-            <Button variant="outline" size="sm">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
-            <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gray-50 flex">
+      <Navigation />
 
-      <div className="flex max-w-7xl mx-auto">
-        <Navigation />
+      <main className="flex-1">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Brain className="h-5 w-5 text-white" />
+              </div>
+              <h1 className="text-xl font-semibold text-gray-900">StudyUp</h1>
+            </div>
+            <UserMenu />
+          </div>
+        </header>
 
-        {/* Main Content */}
-        <main className="flex-1 p-6">
+        <div className="p-6">
           {/* Welcome Section */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Welcome back!</h2>
@@ -42,11 +39,11 @@ const Index = () => {
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Ask Your AI Assistant</h3>
                   <p className="text-gray-600 mb-4">Upload content, ask questions, or get study suggestions</p>
                   <div className="flex space-x-3">
-                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                    <Button size="sm" className="bg-blue-600 hover:bg-blue-700" onClick={() => window.location.href='/ai-tutor'}>
                       <MessageSquare className="h-4 w-4 mr-2" />
                       Start Chat
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button variant="outline" size="sm" onClick={() => window.location.href='/upload'}>
                       <Upload className="h-4 w-4 mr-2" />
                       Upload File
                     </Button>
@@ -156,8 +153,8 @@ const Index = () => {
               </CardContent>
             </Card>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

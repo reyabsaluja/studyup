@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -60,7 +59,8 @@ const AITutor = () => {
                 <Brain className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h1 className="text-xl font-semibold text-gray-900">AI Tutor</h1>
+                <h1 className="text-xl font-semibold text-gray-900">StudyUp</h1>
+                <span className="text-sm text-gray-500">AI Tutor</span>
                 {courseContext && (
                   <p className="text-sm text-gray-500">Currently helping with: {courseContext.courseName}</p>
                 )}

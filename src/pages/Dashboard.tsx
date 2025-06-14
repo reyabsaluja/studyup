@@ -72,7 +72,7 @@ const Dashboard = () => {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Brain className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-xl font-semibold text-gray-900">Taski</h1>
+              <h1 className="text-xl font-semibold text-gray-900">StudyUp</h1>
             </div>
             <UserMenu />
           </div>
