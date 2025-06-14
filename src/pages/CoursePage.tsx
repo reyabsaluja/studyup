@@ -154,13 +154,7 @@ const CoursePage = () => {
       <main className="flex-1">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Brain className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-xl font-semibold text-gray-900">Academic Aura</h1>
-            </div>
+          <div className="flex items-center justify-end">
             <div className="flex items-center space-x-4">
               <Button variant="outline" onClick={() => navigate('/courses')}>
                 <ArrowLeft className="h-4 w-4 mr-2" />

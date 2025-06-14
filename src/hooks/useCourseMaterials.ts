@@ -1,7 +1,15 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
+import * as pdfjsLib from 'pdfjs-dist';
+
+// Setting worker path for pdfjs-dist
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url,
+).toString();
 
 type CourseMaterial = Database['public']['Tables']['course_materials']['Row'];
 
@@ -35,7 +43,7 @@ export const useCourseMaterials = (courseId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Extract text content from the file if it's a plain text file.
+      // Extract text content from the file.
       let content: string | null = null;
       if (file.type === 'text/plain') {
         try {
@@ -43,6 +51,23 @@ export const useCourseMaterials = (courseId: string) => {
         } catch (e) {
           console.error("Could not read file content:", e);
           toast.warning("Could not read content from the text file.");
+        }
+      } else if (file.type === 'application/pdf') {
+        try {
+          const fileBuffer = await file.arrayBuffer();
+          const typedarray = new Uint8Array(fileBuffer);
+          const pdf = await pdfjsLib.getDocument(typedarray).promise;
+          let fullText = '';
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map((item: any) => item.str).join(' ');
+            fullText += pageText + ' ';
+          }
+          content = fullText.trim();
+        } catch (e: any) {
+          console.error("Could not read PDF file content:", e);
+          toast.error(`Failed to read content from the PDF file: ${e.message}`);
         }
       }
 
