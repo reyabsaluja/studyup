@@ -44,13 +44,14 @@ export const useStudySessions = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Use raw query since the table isn't in generated types yet
       const { data, error } = await supabase
-        .from('study_sessions')
+        .from('study_sessions' as any)
         .select('*')
         .order('scheduled_date', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data || []) as StudySession[];
     },
   });
 
@@ -60,7 +61,7 @@ export const useStudySessions = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('study_sessions')
+        .from('study_sessions' as any)
         .insert({ 
           ...newSession, 
           user_id: user.id,
@@ -89,7 +90,7 @@ export const useStudySessions = () => {
           related_course_name: course?.name || 'Unknown Course',
         });
 
-      return data;
+      return data as StudySession;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['studySessions'] });
@@ -108,7 +109,7 @@ export const useStudySessions = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('study_sessions')
+        .from('study_sessions' as any)
         .update(updates)
         .eq('id', id)
         .select()
@@ -121,7 +122,7 @@ export const useStudySessions = () => {
         const { data: course } = await supabase
           .from('courses')
           .select('name')
-          .eq('id', data.course_id)
+          .eq('id', (data as StudySession).course_id)
           .single();
 
         await supabase
@@ -129,13 +130,13 @@ export const useStudySessions = () => {
           .insert({
             user_id: user.id,
             activity_type: updates.completed ? 'study_session_completed' : 'study_session_updated',
-            activity_description: `${updates.completed ? 'Completed' : 'Updated'} study session: ${data.title}`,
-            related_course_id: data.course_id,
+            activity_description: `${updates.completed ? 'Completed' : 'Updated'} study session: ${(data as StudySession).title}`,
+            related_course_id: (data as StudySession).course_id,
             related_course_name: course?.name || 'Unknown Course',
           });
       }
 
-      return data;
+      return data as StudySession;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['studySessions'] });
@@ -154,7 +155,7 @@ export const useStudySessions = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase
-        .from('study_sessions')
+        .from('study_sessions' as any)
         .delete()
         .eq('id', session.id);
 

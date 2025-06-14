@@ -140,20 +140,26 @@ const Planner = () => {
                         className="rounded-md border w-full max-w-md"
                         components={{
                           Day: ({ date, ...props }) => {
-                            const hasEvents = datesWithEvents.has(date.toDateString());
+                            const hasStudySessions = getSessionsForDate(date).length > 0;
+                            const hasAssignments = getAssignmentsForDate(date).length > 0;
                             const isSelected = selectedDate && isSameDay(date, selectedDate);
                             
                             return (
                               <div className="relative">
                                 <button 
                                   {...props} 
-                                  className={`${props.className} ${isSelected ? 'bg-primary text-primary-foreground' : ''}`}
+                                  className={`${props.className} ${isSelected ? 'bg-primary text-primary-foreground' : ''} relative w-9 h-9 p-0 font-normal aria-selected:opacity-100`}
                                   onClick={() => handleDateClick(date)}
                                 >
                                   {date.getDate()}
-                                  {hasEvents && (
-                                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-green-500 rounded-full"></div>
-                                  )}
+                                  <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 flex gap-0.5">
+                                    {hasStudySessions && (
+                                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+                                    )}
+                                    {hasAssignments && (
+                                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
+                                    )}
+                                  </div>
                                 </button>
                               </div>
                             );
@@ -169,7 +175,10 @@ const Planner = () => {
                       {/* Study Sessions */}
                       {selectedDateSessions.length > 0 && (
                         <div>
-                          <h4 className="font-medium text-sm text-gray-600 mb-2">Study Sessions</h4>
+                          <h4 className="font-medium text-sm text-gray-600 mb-2 flex items-center">
+                            <BookOpen className="h-4 w-4 mr-1 text-blue-500" />
+                            Study Sessions
+                          </h4>
                           <div className="space-y-2">
                             {selectedDateSessions.map((session) => {
                               const course = courses.find(c => c.id === session.course_id);
@@ -214,12 +223,15 @@ const Planner = () => {
                       {/* Assignments Due */}
                       {selectedDateAssignments.length > 0 && (
                         <div>
-                          <h4 className="font-medium text-sm text-gray-600 mb-2">Assignments Due</h4>
+                          <h4 className="font-medium text-sm text-gray-600 mb-2 flex items-center">
+                            <Target className="h-4 w-4 mr-1 text-green-500" />
+                            Assignments Due
+                          </h4>
                           <div className="space-y-2">
                             {selectedDateAssignments.map((assignment) => {
                               const course = courses.find(c => c.id === assignment.course_id);
                               return (
-                                <div key={assignment.id} className="p-3 border rounded-lg bg-red-50">
+                                <div key={assignment.id} className="p-3 border rounded-lg bg-green-50">
                                   <div className="flex justify-between items-start">
                                     <div>
                                       <p className="font-medium">{assignment.title}</p>
