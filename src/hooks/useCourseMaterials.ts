@@ -58,10 +58,13 @@ export const useCourseMaterials = (courseId: string) => {
           for (let i = 1; i <= pdf.numPages; i++) {
             const page = await pdf.getPage(i);
             const textContent = await page.getTextContent();
-            const pageText = textContent.items.map((item: any) => 'str' in item ? item.str : '').join(' ');
-            fullText += pageText + ' ';
+            const pageText = textContent.items.map((item: any) => 'str' in item ? item.str : '').join('');
+            fullText += pageText + '\n\n';
           }
           content = fullText.trim();
+          if (!content) {
+            toast.info("No text could be extracted from this PDF. It might be an image-based file (e.g., a scan).");
+          }
         } catch (e: any) {
           console.error("Could not read PDF file content:", e);
           toast.error(`Failed to read content from the PDF file: ${e.message}`);

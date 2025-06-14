@@ -1,3 +1,4 @@
+
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -154,7 +155,11 @@ const CoursePage = () => {
       <main className="flex-1">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-end">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`w-4 h-4 ${course.color} rounded-full`}></div>
+              <h1 className="text-2xl font-bold text-gray-900">{course.name}</h1>
+            </div>
             <div className="flex items-center space-x-4">
               <Button variant="outline" onClick={() => navigate('/courses')}>
                 <ArrowLeft className="h-4 w-4 mr-2" />
@@ -168,10 +173,6 @@ const CoursePage = () => {
         <div className="p-6">
           {/* Course Header */}
           <div className="mb-8">
-            <div className="flex items-center space-x-3 mb-2">
-              <div className={`w-4 h-4 ${course.color} rounded-full`}></div>
-              <h2 className="text-3xl font-bold text-gray-900">{course.name}</h2>
-            </div>
             <p className="text-lg text-gray-600 mb-2">{course.code}</p>
             {course.description && (
               <p className="text-gray-600">{course.description}</p>
