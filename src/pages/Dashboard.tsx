@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Calendar, FileText, Brain, CheckCircle, AlertCircle, Clock } from "lucide-react";
@@ -7,6 +6,7 @@ import UserMenu from "@/components/UserMenu";
 import { useNavigate } from "react-router-dom";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
 import { useActivities } from "@/hooks/useActivities";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -149,26 +149,28 @@ const Dashboard = () => {
                 <CardTitle>Recent Activity</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {activitiesLoading ? (
-                    <div className="text-sm text-gray-500">Loading activities...</div>
-                  ) : activities.length > 0 ? (
-                    activities.map((activity) => (
-                      <div key={activity.id} className="flex items-start space-x-3">
-                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{activity.activity_description}</p>
-                          <p className="text-xs text-gray-500">
-                            {activity.related_course_name && `${activity.related_course_name} • `}
-                            {formatActivityTime(activity.created_at)}
-                          </p>
+                <ScrollArea className="h-60 w-full pr-2">
+                  <div className="space-y-4">
+                    {activitiesLoading ? (
+                      <div className="text-sm text-gray-500">Loading activities...</div>
+                    ) : activities.length > 0 ? (
+                      activities.slice(0, 4).map((activity) => (
+                        <div key={activity.id} className="flex items-start space-x-3">
+                          <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{activity.activity_description}</p>
+                            <p className="text-xs text-gray-500">
+                              {activity.related_course_name && `${activity.related_course_name} • `}
+                              {formatActivityTime(activity.created_at)}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-sm text-gray-500">No recent activity. Start by creating a course or assignment!</div>
-                  )}
-                </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500">No recent activity. Start by creating a course or assignment!</div>
+                    )}
+                  </div>
+                </ScrollArea>
               </CardContent>
             </Card>
           </div>
