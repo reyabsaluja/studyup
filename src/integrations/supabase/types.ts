@@ -90,6 +90,7 @@ export type Database = {
       }
       course_materials: {
         Row: {
+          content: string | null
           course_id: string
           created_at: string | null
           file_path: string | null
@@ -99,6 +100,7 @@ export type Database = {
           url: string | null
         }
         Insert: {
+          content?: string | null
           course_id: string
           created_at?: string | null
           file_path?: string | null
@@ -108,6 +110,7 @@ export type Database = {
           url?: string | null
         }
         Update: {
+          content?: string | null
           course_id?: string
           created_at?: string | null
           file_path?: string | null

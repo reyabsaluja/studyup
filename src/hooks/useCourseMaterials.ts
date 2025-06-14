@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -36,6 +35,17 @@ export const useCourseMaterials = (courseId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Extract text content from the file if it's a plain text file.
+      let content: string | null = null;
+      if (file.type === 'text/plain') {
+        try {
+          content = await file.text();
+        } catch (e) {
+          console.error("Could not read file content:", e);
+          toast.warning("Could not read content from the text file.");
+        }
+      }
+
       // Upload file to storage
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = `${course_id}/${fileName}`;
@@ -52,7 +62,7 @@ export const useCourseMaterials = (courseId: string) => {
         .getPublicUrl(filePath);
 
       // Save material record to database
-      const { data, error } = await supabase
+      const { data, error: insertError } = await supabase
         .from('course_materials')
         .insert({
           course_id,
@@ -60,11 +70,12 @@ export const useCourseMaterials = (courseId: string) => {
           type,
           url: publicUrl,
           file_path: filePath,
+          content, // Save extracted content
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (insertError) throw insertError;
       return data;
     },
     onSuccess: () => {

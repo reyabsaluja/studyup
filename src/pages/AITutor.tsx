@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -78,8 +77,14 @@ const AITutor = () => {
 
     // Add course materials to the context
     if (materials && materials.length > 0) {
-      const materialList = materials.map(m => `- "${m.title}" (Type: ${m.type})`).join('\n');
-      context += `\n\nHere are the course materials available to the student for reference:\n${materialList}\nWhen a question seems related to these materials, you can base your answer on them. Note that you cannot access the content of these files, only their titles and types. If asked to summarize a document, explain this limitation.`;
+      const materialInfo = materials.map(m => {
+        if (m.content) {
+          return `Material Title: "${m.title}"\nType: ${m.type}\nContent:\n${m.content}`;
+        }
+        return `Material Title: "${m.title}"\nType: ${m.type}\n(Content not available for this file type)`;
+      }).join('\n\n---\n\n');
+      
+      context += `\n\nHere are some course materials for reference. Use their content to answer questions when relevant. For some files, only the title and type are available.\n\n${materialInfo}`;
     }
 
     await sendMessage(inputMessage, context);
