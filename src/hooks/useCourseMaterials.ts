@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
 type CourseMaterial = Database['public']['Tables']['course_materials']['Row'];
-type CourseMaterialInsert = Database['public']['Tables']['course_materials']['Insert'];
 
 export const useCourseMaterials = (courseId: string) => {
   const queryClient = useQueryClient();
@@ -37,15 +36,30 @@ export const useCourseMaterials = (courseId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // For now, we'll simulate the upload since storage isn't set up
-      // In a real implementation, you would upload to Supabase Storage first
+      // Upload file to storage
+      const fileName = `${Date.now()}-${file.name}`;
+      const filePath = `${course_id}/${fileName}`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('course-materials')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('course-materials')
+        .getPublicUrl(filePath);
+
+      // Save material record to database
       const { data, error } = await supabase
         .from('course_materials')
         .insert({
           course_id,
           title,
           type,
-          url: `https://example.com/files/${title}`, // Mock URL
+          url: publicUrl,
+          file_path: filePath,
         })
         .select()
         .single();
@@ -64,11 +78,23 @@ export const useCourseMaterials = (courseId: string) => {
   });
 
   const deleteMaterialMutation = useMutation({
-    mutationFn: async (materialId: string) => {
+    mutationFn: async (material: CourseMaterial) => {
+      // Delete file from storage
+      if (material.file_path) {
+        const { error: deleteError } = await supabase.storage
+          .from('course-materials')
+          .remove([material.file_path]);
+        
+        if (deleteError) {
+          console.error('Error deleting file from storage:', deleteError);
+        }
+      }
+
+      // Delete record from database
       const { error } = await supabase
         .from('course_materials')
         .delete()
-        .eq('id', materialId);
+        .eq('id', material.id);
 
       if (error) throw error;
     },

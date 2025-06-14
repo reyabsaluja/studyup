@@ -2,18 +2,21 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Calendar, FileText, Brain, ArrowLeft, Plus, Loader2 } from "lucide-react";
+import { BookOpen, Calendar, FileText, Brain, ArrowLeft, Plus, Loader2, Download, Eye, Trash2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import UserMenu from "@/components/UserMenu";
 import { useCourses } from "@/hooks/useCourses";
 import { useAssignments } from "@/hooks/useAssignments";
+import { useCourseMaterials } from "@/hooks/useCourseMaterials";
 import AddAssignmentDialog from "@/components/AddAssignmentDialog";
+import AddMaterialDialog from "@/components/AddMaterialDialog";
 
 const CoursePage = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
   const { courses, isLoading: coursesLoading } = useCourses();
   const { assignments, isLoading: assignmentsLoading, createAssignment, isCreating } = useAssignments(courseId || '');
+  const { materials, isLoading: materialsLoading, uploadMaterial, deleteMaterial, isUploading } = useCourseMaterials(courseId || '');
 
   const course = courses.find(c => c.id === courseId);
 
@@ -30,6 +33,19 @@ const CoursePage = () => {
     }
   };
 
+  const handleAddMaterial = (materialData: {
+    title: string;
+    type: string;
+    file: File;
+  }) => {
+    if (courseId) {
+      uploadMaterial({
+        ...materialData,
+        course_id: courseId
+      });
+    }
+  };
+
   const handleAskAI = () => {
     if (course) {
       navigate('/ai-tutor', { 
@@ -40,6 +56,17 @@ const CoursePage = () => {
         } 
       });
     }
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return '📷';
+    if (type.startsWith('video/')) return '🎥';
+    if (type.startsWith('audio/')) return '🎵';
+    if (type.includes('pdf')) return '📄';
+    if (type.includes('document')) return '📝';
+    if (type.includes('presentation')) return '📊';
+    if (type.includes('spreadsheet')) return '📈';
+    return '📎';
   };
 
   if (coursesLoading || assignmentsLoading) {
@@ -130,7 +157,7 @@ const CoursePage = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Materials</p>
-                    <p className="text-2xl font-bold text-gray-900">{course.materialCount}</p>
+                    <p className="text-2xl font-bold text-gray-900">{materials?.length || 0}</p>
                     <p className="text-xs text-gray-500">Course materials</p>
                   </div>
                   <BookOpen className="h-8 w-8 text-green-600" />
@@ -157,6 +184,7 @@ const CoursePage = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="flex space-x-4">
               <AddAssignmentDialog onAddAssignment={handleAddAssignment} isCreating={isCreating} />
+              <AddMaterialDialog onAddMaterial={handleAddMaterial} isUploading={isUploading} />
               <Button variant="outline" onClick={handleAskAI}>
                 <Brain className="h-4 w-4 mr-2" />
                 Ask AI About This Course
@@ -164,7 +192,7 @@ const CoursePage = () => {
             </div>
           </div>
 
-          {/* Assignments Section */}
+          {/* Assignments and Materials Section */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
@@ -209,18 +237,68 @@ const CoursePage = () => {
             {/* Course Materials */}
             <Card>
               <CardHeader>
-                <CardTitle>Course Materials</CardTitle>
+                <CardTitle className="flex items-center justify-between">
+                  <span>Course Materials</span>
+                  <AddMaterialDialog onAddMaterial={handleAddMaterial} isUploading={isUploading} />
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-8">
-                  <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-                  <h4 className="text-lg font-medium text-gray-900 mb-2">No materials yet</h4>
-                  <p className="text-gray-500 mb-4">Upload course materials to get started.</p>
-                  <Button variant="outline">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Material
-                  </Button>
-                </div>
+                {materialsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                    <span>Loading materials...</span>
+                  </div>
+                ) : materials && materials.length > 0 ? (
+                  <div className="space-y-3">
+                    {materials.map((material) => (
+                      <div key={material.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center space-x-3">
+                          <span className="text-2xl">{getFileIcon(material.type)}</span>
+                          <div>
+                            <p className="font-medium text-gray-900">{material.title}</p>
+                            <p className="text-sm text-gray-500">
+                              {new Date(material.created_at!).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => window.open(material.url || '', '_blank')}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => {
+                              const link = document.createElement('a');
+                              link.href = material.url || '';
+                              link.download = material.title;
+                              link.click();
+                            }}
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="sm"
+                            onClick={() => deleteMaterial(material)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">No materials yet</h4>
+                    <p className="text-gray-500 mb-4">Upload course materials to get started.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
