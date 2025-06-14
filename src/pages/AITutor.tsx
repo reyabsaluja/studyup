@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -133,7 +132,8 @@ const AITutor = () => {
               </CardHeader>
 
               <CardContent className="flex-1 flex flex-col">
-                <ScrollArea className="flex-1 mb-4 pr-4">
+                {/* Custom scrollable container for messages */}
+                <div className="flex-1 mb-4 pr-4 overflow-y-auto" style={{ minHeight: 0 }}>
                   <div className="space-y-4">
                     {messages.length === 0 ? (
                       <div className="text-center text-gray-500 py-8">
@@ -194,7 +194,7 @@ const AITutor = () => {
                       </div>
                     )}
                   </div>
-                </ScrollArea>
+                </div>
 
                 <div className="flex space-x-2">
                   <Input
