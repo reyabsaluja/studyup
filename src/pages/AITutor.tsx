@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,13 +11,42 @@ import UserMenu from '@/components/UserMenu';
 import { useGeminiChat } from '@/hooks/useGeminiChat';
 import ReactMarkdown from 'react-markdown';
 
+// Custom CSS animation for highlighting new assistant responses
+const highlightStyle = `
+@keyframes ai-highlight {
+  0% { background: #fffbe7; }
+  100% { background: transparent; }
+}
+.ai-highlight {
+  animation: ai-highlight 1.2s ease;
+}
+`;
+
 const AITutor = () => {
   const [inputMessage, setInputMessage] = useState('');
   const { messages, isLoading, sendMessage, clearMessages } = useGeminiChat();
   const location = useLocation();
-  
+
+  // For highlighting the latest assistant message
+  const [highlightId, setHighlightId] = useState<string | null>(null);
+  const prevMessagesLength = useRef(messages.length);
+
   // Get course context from navigation state
   const courseContext = location.state as { courseId?: string; courseName?: string; context?: string } | null;
+
+  useEffect(() => {
+    // Detect if a new assistant message arrived
+    if (
+      messages.length > prevMessagesLength.current &&
+      messages[messages.length - 1]?.role === 'assistant'
+    ) {
+      const newAssistantId = messages[messages.length - 1].id;
+      setHighlightId(newAssistantId);
+      // Remove highlight after 1.1s (less than animation duration)
+      setTimeout(() => setHighlightId(null), 1100);
+    }
+    prevMessagesLength.current = messages.length;
+  }, [messages]);
 
   useEffect(() => {
     // If we have course context and no messages yet, send a greeting
@@ -28,14 +58,14 @@ const AITutor = () => {
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
-    
+
     let context = "You are an AI tutor helping students with their academic questions. Be helpful, encouraging, and provide clear explanations.";
-    
+
     // Add course-specific context if available
     if (courseContext) {
       context += ` The student is currently working on ${courseContext.courseName}. Tailor your responses to be relevant to this course when appropriate.`;
     }
-    
+
     await sendMessage(inputMessage, context);
     setInputMessage('');
   };
@@ -49,8 +79,10 @@ const AITutor = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
+      {/* Inject animation CSS style */}
+      <style>{highlightStyle}</style>
       <Navigation />
-      
+
       <main className="flex-1">
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -99,7 +131,7 @@ const AITutor = () => {
                   )}
                 </CardTitle>
               </CardHeader>
-              
+
               <CardContent className="flex-1 flex flex-col">
                 <ScrollArea className="flex-1 mb-4 pr-4">
                   <div className="space-y-4">
@@ -107,7 +139,7 @@ const AITutor = () => {
                       <div className="text-center text-gray-500 py-8">
                         <Brain className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                         <p>
-                          {courseContext 
+                          {courseContext
                             ? `Ready to help you with ${courseContext.courseName}!`
                             : 'Start a conversation with your AI tutor!'
                           }
@@ -121,11 +153,13 @@ const AITutor = () => {
                           className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[80%] break-words whitespace-pre-wrap p-3 rounded-lg overflow-x-auto ${
-                              message.role === 'user'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-900'
-                            }`}
+                            className={`max-w-[80%] break-words whitespace-pre-wrap p-3 rounded-lg overflow-x-auto transition-colors
+                              ${message.role === 'user'
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-gray-100 text-gray-900'
+                              }
+                              ${message.role === 'assistant' && message.id === highlightId ? 'ai-highlight' : ''}
+                            `}
                             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                           >
                             {message.role === 'assistant' ? (
@@ -148,7 +182,7 @@ const AITutor = () => {
                         </div>
                       ))
                     )}
-                    
+
                     {isLoading && (
                       <div className="flex justify-start">
                         <div className="bg-gray-100 text-gray-900 p-3 rounded-lg">
@@ -168,15 +202,15 @@ const AITutor = () => {
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder={
-                      courseContext 
+                      courseContext
                         ? `Ask about ${courseContext.courseName}...`
                         : "Ask your AI tutor anything..."
                     }
                     disabled={isLoading}
                     className="flex-1"
                   />
-                  <Button 
-                    onClick={handleSendMessage} 
+                  <Button
+                    onClick={handleSendMessage}
                     disabled={isLoading || !inputMessage.trim()}
                   >
                     <Send className="h-4 w-4" />
