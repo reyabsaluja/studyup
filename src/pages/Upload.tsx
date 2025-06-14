@@ -150,18 +150,15 @@ const Upload = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <Navigation />
-      <div className="flex-1">
+      <main className="flex-1">
         <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Course Materials</h1>
-              <p className="text-gray-600">Upload and manage your study materials</p>
-            </div>
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-semibold text-gray-900">Upload</h1>
             <UserMenu />
           </div>
         </header>
 
-        <main className="p-6">
+        <div className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Upload Section */}
             <div className="lg:col-span-2">
@@ -404,8 +401,8 @@ const Upload = () => {
               </Card>
             </div>
           </div>
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };

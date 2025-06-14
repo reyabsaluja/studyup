@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Calendar, FileText, Users, Brain, Loader2 } from "lucide-react";
@@ -58,12 +57,7 @@ const Courses = () => {
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Brain className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-xl font-semibold text-gray-900">Courses</h1>
-            </div>
+            <h1 className="text-xl font-semibold text-gray-900">Courses</h1>
             <div className="flex items-center space-x-4">
               <AddCourseDialog onAddCourse={handleAddCourse} isCreating={isCreating} />
               <UserMenu />

@@ -68,12 +68,7 @@ const Dashboard = () => {
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Brain className="h-5 w-5 text-white" />
-              </div>
-              <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
-            </div>
+            <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
             <UserMenu />
           </div>
         </header>
