@@ -95,10 +95,23 @@ export const useCourses = () => {
         .single();
 
       if (error) throw error;
+
+      // Track activity
+      await supabase
+        .from('activities')
+        .insert({
+          user_id: user.id,
+          activity_type: 'course_created',
+          activity_description: `Created course: ${newCourse.name}`,
+          related_course_id: data.id,
+          related_course_name: newCourse.name,
+        });
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
       toast.success('Course created successfully!');
     },
     onError: (error) => {
@@ -109,15 +122,38 @@ export const useCourses = () => {
 
   const deleteCourseMutation = useMutation({
     mutationFn: async (courseId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Get course name before deletion for activity tracking
+      const { data: course } = await supabase
+        .from('courses')
+        .select('name')
+        .eq('id', courseId)
+        .single();
+
       const { error } = await supabase
         .from('courses')
         .delete()
         .eq('id', courseId);
 
       if (error) throw error;
+
+      // Track activity
+      if (course) {
+        await supabase
+          .from('activities')
+          .insert({
+            user_id: user.id,
+            activity_type: 'course_deleted',
+            activity_description: `Deleted course: ${course.name}`,
+            related_course_name: course.name,
+          });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
       toast.success('Course deleted successfully!');
     },
     onError: (error) => {

@@ -27,6 +27,9 @@ export const useAssignments = (courseId: string) => {
 
   const createAssignmentMutation = useMutation({
     mutationFn: async (newAssignment: Omit<AssignmentInsert, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
       const { data, error } = await supabase
         .from('assignments')
         .insert(newAssignment)
@@ -34,11 +37,31 @@ export const useAssignments = (courseId: string) => {
         .single();
 
       if (error) throw error;
+
+      // Get course name for activity tracking
+      const { data: course } = await supabase
+        .from('courses')
+        .select('name')
+        .eq('id', newAssignment.course_id)
+        .single();
+
+      // Track activity
+      await supabase
+        .from('activities')
+        .insert({
+          user_id: user.id,
+          activity_type: 'assignment_created',
+          activity_description: `Created assignment: ${newAssignment.title}`,
+          related_course_id: newAssignment.course_id,
+          related_course_name: course?.name || 'Unknown Course',
+        });
+
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['assignments', courseId] });
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
       toast.success('Assignment created successfully!');
     },
     onError: (error) => {

@@ -1,3 +1,4 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Calendar, FileText, Brain, TrendingUp, Target, Clock } from "lucide-react";
@@ -5,10 +6,12 @@ import Navigation from "@/components/Navigation";
 import UserMenu from "@/components/UserMenu";
 import { useNavigate } from "react-router-dom";
 import { useDashboardStats } from "@/hooks/useDashboardStats";
+import { useActivities } from "@/hooks/useActivities";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { stats, isLoading } = useDashboardStats();
+  const { activities, isLoading: activitiesLoading } = useActivities();
 
   const statsData = [
     {
@@ -41,12 +44,21 @@ const Dashboard = () => {
     }
   ];
 
-  const recentActivity = [
-    { action: "Completed Physics Assignment", course: "PHYS 301", time: "2 hours ago" },
-    { action: "Added notes on Calculus", course: "MATH 203", time: "4 hours ago" },
-    { action: "Started History essay", course: "HIST 250", time: "1 day ago" },
-    { action: "Uploaded CS project", course: "CS 101", time: "2 days ago" }
-  ];
+  const formatActivityTime = (timestamp: string) => {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 60) {
+      return `${diffInMinutes} minutes ago`;
+    } else if (diffInMinutes < 1440) {
+      const hours = Math.floor(diffInMinutes / 60);
+      return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    } else {
+      const days = Math.floor(diffInMinutes / 1440);
+      return `${days} day${days > 1 ? 's' : ''} ago`;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -120,7 +132,11 @@ const Dashboard = () => {
                   <Calendar className="h-4 w-4 mr-2" />
                   Plan Study Session
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => navigate("/ai-tutor")}
+                >
                   <Brain className="h-4 w-4 mr-2" />
                   Ask AI Tutor
                 </Button>
@@ -134,15 +150,24 @@ const Dashboard = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentActivity.map((activity, index) => (
-                    <div key={index} className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                        <p className="text-xs text-gray-500">{activity.course} • {activity.time}</p>
+                  {activitiesLoading ? (
+                    <div className="text-sm text-gray-500">Loading activities...</div>
+                  ) : activities.length > 0 ? (
+                    activities.map((activity) => (
+                      <div key={activity.id} className="flex items-start space-x-3">
+                        <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">{activity.activity_description}</p>
+                          <p className="text-xs text-gray-500">
+                            {activity.related_course_name && `${activity.related_course_name} • `}
+                            {formatActivityTime(activity.created_at)}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-500">No recent activity. Start by creating a course or assignment!</div>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -159,7 +184,7 @@ const Dashboard = () => {
                   <p className="text-gray-600 mb-4">
                     Get personalized study plans, instant help, and smart insights to boost your academic performance.
                   </p>
-                  <Button>
+                  <Button onClick={() => navigate("/ai-tutor")}>
                     <Brain className="h-4 w-4 mr-2" />
                     Explore AI Features
                   </Button>
