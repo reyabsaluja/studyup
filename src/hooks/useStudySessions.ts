@@ -41,8 +41,8 @@ export const useStudySessions = () => {
   const { data: studySessions = [], isLoading, error } = useQuery({
     queryKey: ['studySessions'],
     queryFn: async (): Promise<StudySession[]> => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!user || userError) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
         .from('study_sessions' as any)
@@ -50,14 +50,21 @@ export const useStudySessions = () => {
         .order('scheduled_date', { ascending: true });
 
       if (error) throw error;
-      return (data ?? []) as StudySession[];
+      if (!Array.isArray(data)) return [];
+      // Additional runtime filter to ensure the type
+      return data.filter((s) =>
+        s &&
+        typeof s.id === 'string' &&
+        typeof s.user_id === 'string' &&
+        typeof s.course_id === 'string'
+      ) as StudySession[];
     },
   });
 
   const createStudySessionMutation = useMutation({
     mutationFn: async (newSession: StudySessionInsert) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!user || userError) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
         .from('study_sessions' as any)
@@ -89,6 +96,7 @@ export const useStudySessions = () => {
           related_course_name: course?.name || 'Unknown Course',
         });
 
+      // No need to cast, we just validated it's a StudySession
       return data as StudySession;
     },
     onSuccess: () => {
@@ -104,8 +112,8 @@ export const useStudySessions = () => {
 
   const updateStudySessionMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: string; updates: StudySessionUpdate }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!user || userError) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
         .from('study_sessions' as any)
@@ -150,8 +158,8 @@ export const useStudySessions = () => {
 
   const deleteStudySessionMutation = useMutation({
     mutationFn: async (session: StudySession) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+      if (!user || userError) throw new Error('Not authenticated');
 
       const { error } = await supabase
         .from('study_sessions' as any)
@@ -204,3 +212,4 @@ export const useStudySessions = () => {
 };
 
 // ...end of file
+
