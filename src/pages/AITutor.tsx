@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import { useGeminiChat } from '@/hooks/useGeminiChat';
 import ReactMarkdown from 'react-markdown';
+import { useCourseMaterials } from '@/hooks/useCourseMaterials';
 
 // Custom CSS animation for highlighting new assistant responses
 const highlightStyle = `
@@ -35,6 +35,9 @@ const AITutor = () => {
   // Get course context from navigation state
   const courseContext = location.state as { courseId?: string; courseName?: string; context?: string } | null;
   
+  // Fetch course materials if a courseId is present
+  const { materials } = useCourseMaterials(courseContext?.courseId ?? '');
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
@@ -70,6 +73,12 @@ const AITutor = () => {
     // Add course-specific context if available
     if (courseContext) {
       context += ` The student is currently working on ${courseContext.courseName}. Tailor your responses to be relevant to this course when appropriate.`;
+    }
+
+    // Add course materials to the context
+    if (materials && materials.length > 0) {
+      const materialList = materials.map(m => `- "${m.title}" (Type: ${m.type})`).join('\n');
+      context += `\n\nHere are the course materials available to the student for reference:\n${materialList}\nWhen a question seems related to these materials, you can base your answer on them. Note that you cannot access the content of these files, only their titles and types. If asked to summarize a document, explain this limitation.`;
     }
 
     await sendMessage(inputMessage, context);
