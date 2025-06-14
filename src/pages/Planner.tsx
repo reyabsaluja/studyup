@@ -4,33 +4,45 @@ import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Clock, BookOpen, Target, Calendar as CalendarIcon } from 'lucide-react';
-import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addDays } from 'date-fns';
+import { Plus, Clock, BookOpen, Target, Calendar as CalendarIcon, Trash2, Edit, Check } from 'lucide-react';
+import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addDays, isSameDay } from 'date-fns';
 import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import AddStudySessionDialog from '@/components/AddStudySessionDialog';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
-import { useAssignments } from '@/hooks/useAssignments';
+import { useAllAssignments } from '@/hooks/useAssignments';
 
 const Planner = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const { studySessions, isLoading } = useStudySessions();
+  const { studySessions, isLoading, updateStudySession, deleteStudySession } = useStudySessions();
   const { courses } = useCourses();
-  const { assignments } = useAssignments('');
+  const { assignments } = useAllAssignments();
 
   const getSessionsForDate = (date: Date) => {
     return studySessions.filter(session => {
       const sessionDate = new Date(session.scheduled_date);
-      return sessionDate.toDateString() === date.toDateString();
+      return isSameDay(sessionDate, date);
+    });
+  };
+
+  const getAssignmentsForDate = (date: Date) => {
+    return assignments.filter(assignment => {
+      if (!assignment.due_date) return false;
+      const dueDate = new Date(assignment.due_date);
+      return isSameDay(dueDate, date);
     });
   };
 
   const getUpcomingDeadlines = () => {
     const now = new Date();
     return assignments
-      .filter(assignment => assignment.due_date && new Date(assignment.due_date) > now && !assignment.completed)
+      .filter(assignment => {
+        if (!assignment.due_date || assignment.completed) return false;
+        const dueDate = new Date(assignment.due_date);
+        return dueDate > now;
+      })
       .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())
       .slice(0, 5);
   };
@@ -56,9 +68,35 @@ const Planner = () => {
     return format(date, 'MMM d');
   };
 
+  const getDatesWithEvents = () => {
+    const datesWithEvents = new Set<string>();
+    
+    // Add dates with study sessions
+    studySessions.forEach(session => {
+      const sessionDate = new Date(session.scheduled_date);
+      datesWithEvents.add(sessionDate.toDateString());
+    });
+    
+    // Add dates with assignments
+    assignments.forEach(assignment => {
+      if (assignment.due_date) {
+        const dueDate = new Date(assignment.due_date);
+        datesWithEvents.add(dueDate.toDateString());
+      }
+    });
+    
+    return datesWithEvents;
+  };
+
+  const handleCompleteSession = (sessionId: string, completed: boolean) => {
+    updateStudySession({ id: sessionId, updates: { completed } });
+  };
+
   const selectedDateSessions = getSessionsForDate(selectedDate);
+  const selectedDateAssignments = getAssignmentsForDate(selectedDate);
   const upcomingDeadlines = getUpcomingDeadlines();
   const weeklyProgress = getWeeklyProgress();
+  const datesWithEvents = getDatesWithEvents();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -89,44 +127,126 @@ const Planner = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
+                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                    <div className="flex justify-center">
                       <Calendar
                         mode="single"
                         selected={selectedDate}
                         onSelect={(date) => date && setSelectedDate(date)}
-                        className="rounded-md border"
-                      />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold mb-4">
-                        Sessions for {formatDateLabel(selectedDate)}
-                      </h3>
-                      {selectedDateSessions.length > 0 ? (
-                        <div className="space-y-3">
-                          {selectedDateSessions.map((session) => {
-                            const course = courses.find(c => c.id === session.course_id);
+                        className="rounded-md border w-full max-w-md"
+                        classNames={{
+                          months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+                          month: "space-y-4 w-full",
+                          caption: "flex justify-center pt-1 relative items-center",
+                          caption_label: "text-sm font-medium",
+                          table: "w-full border-collapse space-y-1",
+                          head_row: "flex",
+                          head_cell: "text-muted-foreground rounded-md w-12 h-12 font-normal text-[0.8rem] flex items-center justify-center",
+                          row: "flex w-full mt-2",
+                          cell: "h-12 w-12 text-center text-sm p-0 relative [&:has([aria-selected].day-range-end)]:rounded-r-md [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+                          day: "h-12 w-12 p-0 font-normal aria-selected:opacity-100 hover:bg-accent hover:text-accent-foreground rounded-md flex items-center justify-center relative",
+                          day_selected: "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
+                          day_today: "bg-accent text-accent-foreground font-semibold",
+                          day_outside: "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+                          day_disabled: "text-muted-foreground opacity-50",
+                        }}
+                        components={{
+                          Day: ({ date, ...props }) => {
+                            const hasEvents = datesWithEvents.has(date.toDateString());
                             return (
-                              <div key={session.id} className="p-3 border rounded-lg">
-                                <div className="flex justify-between items-start">
-                                  <div>
-                                    <p className="font-medium">{session.title}</p>
-                                    <p className="text-sm text-gray-600">{course?.name}</p>
-                                    <div className="flex items-center mt-1 text-sm text-gray-500">
-                                      <Clock className="h-3 w-3 mr-1" />
-                                      {session.duration} minutes
-                                    </div>
-                                  </div>
-                                  <Badge variant={session.completed ? "default" : "secondary"}>
-                                    {session.completed ? "Completed" : "Scheduled"}
-                                  </Badge>
-                                </div>
+                              <div className="relative">
+                                <button {...props} className={props.className}>
+                                  {date.getDate()}
+                                  {hasEvents && (
+                                    <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-blue-500 rounded-full"></div>
+                                  )}
+                                </button>
                               </div>
                             );
-                          })}
+                          }
+                        }}
+                      />
+                    </div>
+                    <div className="space-y-4">
+                      <h3 className="font-semibold text-lg">
+                        Events for {formatDateLabel(selectedDate)}
+                      </h3>
+                      
+                      {/* Study Sessions */}
+                      {selectedDateSessions.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-600 mb-2">Study Sessions</h4>
+                          <div className="space-y-2">
+                            {selectedDateSessions.map((session) => {
+                              const course = courses.find(c => c.id === session.course_id);
+                              return (
+                                <div key={session.id} className="p-3 border rounded-lg bg-blue-50">
+                                  <div className="flex justify-between items-start">
+                                    <div className="flex-1">
+                                      <p className="font-medium">{session.title}</p>
+                                      <p className="text-sm text-gray-600">{course?.name}</p>
+                                      <div className="flex items-center mt-1 text-sm text-gray-500">
+                                        <Clock className="h-3 w-3 mr-1" />
+                                        {session.duration} minutes
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center space-x-2">
+                                      <Badge variant={session.completed ? "default" : "secondary"}>
+                                        {session.completed ? "Completed" : "Scheduled"}
+                                      </Badge>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleCompleteSession(session.id, !session.completed)}
+                                      >
+                                        <Check className="h-4 w-4" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => deleteStudySession(session)}
+                                      >
+                                        <Trash2 className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      ) : (
-                        <p className="text-gray-500">No study sessions scheduled for this day.</p>
+                      )}
+
+                      {/* Assignments Due */}
+                      {selectedDateAssignments.length > 0 && (
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-600 mb-2">Assignments Due</h4>
+                          <div className="space-y-2">
+                            {selectedDateAssignments.map((assignment) => {
+                              const course = courses.find(c => c.id === assignment.course_id);
+                              return (
+                                <div key={assignment.id} className="p-3 border rounded-lg bg-red-50">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <p className="font-medium">{assignment.title}</p>
+                                      <p className="text-sm text-gray-600">{course?.name || 'Unknown Course'}</p>
+                                      {assignment.description && (
+                                        <p className="text-sm text-gray-500 mt-1">{assignment.description}</p>
+                                      )}
+                                    </div>
+                                    <Badge variant={assignment.completed ? "default" : "destructive"}>
+                                      {assignment.completed ? "Completed" : "Due Today"}
+                                    </Badge>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {selectedDateSessions.length === 0 && selectedDateAssignments.length === 0 && (
+                        <p className="text-gray-500">No events scheduled for this day.</p>
                       )}
                     </div>
                   </div>
@@ -200,9 +320,9 @@ const Planner = () => {
                         const daysUntilDue = Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
                         
                         return (
-                          <div key={assignment.id} className="p-3 border rounded-lg">
+                          <div key={assignment.id} className="p-3 border rounded-lg hover:bg-gray-50">
                             <p className="font-medium text-sm">{assignment.title}</p>
-                            <p className="text-xs text-gray-600">{course?.name}</p>
+                            <p className="text-xs text-gray-600">{course?.name || 'Unknown Course'}</p>
                             <div className="flex justify-between items-center mt-2">
                               <span className="text-xs text-gray-500">
                                 {format(dueDate, 'MMM d')}
@@ -211,7 +331,7 @@ const Planner = () => {
                                 variant={daysUntilDue <= 3 ? "destructive" : "secondary"}
                                 className="text-xs"
                               >
-                                {daysUntilDue} days
+                                {daysUntilDue === 0 ? 'Today' : daysUntilDue === 1 ? 'Tomorrow' : `${daysUntilDue} days`}
                               </Badge>
                             </div>
                           </div>
@@ -247,6 +367,12 @@ const Planner = () => {
                     <div className="flex justify-between">
                       <span className="text-sm text-gray-600">Active Courses</span>
                       <span className="font-medium">{courses.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Pending Assignments</span>
+                      <span className="font-medium text-orange-600">
+                        {assignments.filter(a => !a.completed && a.due_date && new Date(a.due_date) > new Date()).length}
+                      </span>
                     </div>
                   </div>
                 </CardContent>

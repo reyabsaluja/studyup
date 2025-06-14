@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -14,16 +13,18 @@ export const useAssignments = (courseId: string) => {
   const { data: assignments = [], isLoading, error } = useQuery({
     queryKey: ['assignments', courseId],
     queryFn: async (): Promise<Assignment[]> => {
-      const { data, error } = await supabase
-        .from('assignments')
-        .select('*')
-        .eq('course_id', courseId)
-        .order('due_date', { ascending: true });
+      let query = supabase.from('assignments').select('*');
+      
+      // If courseId is provided and not empty, filter by course
+      if (courseId && courseId.trim() !== '') {
+        query = query.eq('course_id', courseId);
+      }
+      
+      const { data, error } = await query.order('due_date', { ascending: true });
 
       if (error) throw error;
       return data || [];
     },
-    enabled: !!courseId,
   });
 
   const createAssignmentMutation = useMutation({
@@ -218,5 +219,33 @@ export const useAssignments = (courseId: string) => {
     isDeleting: deleteAssignmentMutation.isPending,
     toggleAssignmentCompletion: toggleAssignmentCompletionMutation.mutate,
     isTogglingCompletion: toggleAssignmentCompletionMutation.isPending,
+  };
+};
+
+// Create a new hook to get all assignments for the planner
+export const useAllAssignments = () => {
+  const { data: assignments = [], isLoading, error } = useQuery({
+    queryKey: ['assignments', 'all'],
+    queryFn: async (): Promise<Assignment[]> => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('assignments')
+        .select(`
+          *,
+          courses!inner(name, color, code)
+        `)
+        .order('due_date', { ascending: true });
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  return {
+    assignments,
+    isLoading,
+    error,
   };
 };
