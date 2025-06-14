@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -29,9 +30,14 @@ const AITutor = () => {
   // For highlighting the latest assistant message
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const prevMessagesLength = useRef(messages.length);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Get course context from navigation state
   const courseContext = location.state as { courseId?: string; courseName?: string; context?: string } | null;
+  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   useEffect(() => {
     // Detect if a new assistant message arrived
@@ -45,6 +51,7 @@ const AITutor = () => {
       setTimeout(() => setHighlightId(null), 1100);
     }
     prevMessagesLength.current = messages.length;
+    scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
@@ -131,9 +138,9 @@ const AITutor = () => {
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="flex-1 flex flex-col">
+              <CardContent className="flex-1 flex flex-col overflow-hidden">
                 {/* Chat messages scrollable container */}
-                <div className="flex-1 mb-4 pr-4 overflow-y-auto" style={{ minHeight: 0 }}>
+                <ScrollArea className="flex-1 mb-4 pr-4">
                   <div className="space-y-4">
                     {messages.length === 0 ? (
                       <div className="text-center text-gray-500 py-8">
@@ -228,8 +235,9 @@ const AITutor = () => {
                         </div>
                       </div>
                     )}
+                    <div ref={messagesEndRef} />
                   </div>
-                </div>
+                </ScrollArea>
 
                 <div className="flex space-x-2">
                   <Input
