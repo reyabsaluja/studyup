@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -103,7 +102,7 @@ const Planner = () => {
   const datesWithEvents = getDatesWithEvents();
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex font-sans">
       <Navigation />
       <div className="flex-1">
         <header className="bg-white border-b border-gray-200 px-6 py-4">
@@ -143,12 +142,16 @@ const Planner = () => {
                             const hasStudySessions = getSessionsForDate(date).length > 0;
                             const hasAssignments = getAssignmentsForDate(date).length > 0;
                             const isSelected = selectedDate && isSameDay(date, selectedDate);
-                            
+
                             return (
                               <div className="relative">
-                                <button 
-                                  {...props} 
-                                  className={`${props.className || ''} ${isSelected ? 'bg-primary text-primary-foreground' : ''} relative w-9 h-9 p-0 font-normal aria-selected:opacity-100`}
+                                <button
+                                  {...props}
+                                  className={`${props.className || ''} ${
+                                    isSelected
+                                      ? 'bg-primary text-primary-foreground rounded-lg'
+                                      : ''
+                                  } relative w-9 h-9 p-0 font-normal aria-selected:opacity-100`}
                                   onClick={() => handleDateClick(date)}
                                 >
                                   {date.getDate()}
@@ -202,7 +205,11 @@ const Planner = () => {
                                         size="sm"
                                         onClick={() => handleCompleteSession(session.id, !session.completed)}
                                       >
-                                        <Check className="h-4 w-4" />
+                                        {session.completed ? (
+                                          <Check className="h-4 w-4" />
+                                        ) : (
+                                          <Clock className="h-4 w-4" />
+                                        )}
                                       </Button>
                                       <Button
                                         variant="ghost"
