@@ -1,7 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Calendar, FileText, Brain, TrendingUp, Target, Clock } from "lucide-react";
+import { BookOpen, Calendar, FileText, Brain, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import UserMenu from "@/components/UserMenu";
 import { useNavigate } from "react-router-dom";
@@ -22,24 +22,24 @@ const Dashboard = () => {
       color: "text-blue-600"
     },
     {
-      title: "Study Streak",
-      value: "12",
-      description: "Days in a row",
-      icon: TrendingUp,
+      title: "Completed Tasks",
+      value: isLoading ? "-" : stats.totalAssignments.toString(),
+      description: "All time",
+      icon: CheckCircle,
       color: "text-green-600"
     },
     {
       title: "Assignments Due",
       value: isLoading ? "-" : stats.assignmentsDue.toString(),
       description: "This week",
-      icon: Target,
+      icon: AlertCircle,
       color: "text-orange-600"
     },
     {
-      title: "Study Hours",
-      value: isLoading ? "-" : stats.studyHours.toString(),
-      description: "This month",
-      icon: Clock,
+      title: "Total Notes",
+      value: "24",
+      description: "Created notes",
+      icon: FileText,
       color: "text-purple-600"
     }
   ];
@@ -72,7 +72,7 @@ const Dashboard = () => {
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Brain className="h-5 w-5 text-white" />
               </div>
-              <h1 className="text-xl font-semibold text-gray-900">Academic Aura</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Taski</h1>
             </div>
             <UserMenu />
           </div>

@@ -25,6 +25,12 @@ const Navigation = () => {
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-6">
+      <div className="flex items-center space-x-3 mb-8">
+        <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+          <Brain className="h-5 w-5 text-white" />
+        </div>
+        <h1 className="text-xl font-semibold text-gray-900">Taski</h1>
+      </div>
       <nav className="space-y-2">
         {navItems.map((item) => {
           const Icon = item.icon;
