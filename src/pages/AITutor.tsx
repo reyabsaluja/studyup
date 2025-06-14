@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -8,6 +9,7 @@ import { Brain, Send, Trash2 } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import { useGeminiChat } from '@/hooks/useGeminiChat';
+import ReactMarkdown from 'react-markdown';
 
 const AITutor = () => {
   const [inputMessage, setInputMessage] = useState('');
@@ -120,13 +122,25 @@ const AITutor = () => {
                           className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[80%] p-3 rounded-lg ${
+                            className={`max-w-[80%] break-words whitespace-pre-wrap p-3 rounded-lg overflow-x-auto ${
                               message.role === 'user'
                                 ? 'bg-blue-600 text-white'
                                 : 'bg-gray-100 text-gray-900'
                             }`}
+                            style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                           >
-                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            {message.role === 'assistant' ? (
+                              <ReactMarkdown
+                                className="prose prose-sm break-words whitespace-pre-wrap"
+                                components={{
+                                  // Optionally style code blocks, lists, etc.
+                                }}
+                              >
+                                {message.content}
+                              </ReactMarkdown>
+                            ) : (
+                              <p className="text-sm break-words whitespace-pre-wrap">{message.content}</p>
+                            )}
                             <p className="text-xs opacity-70 mt-1">
                               {message.timestamp.toLocaleTimeString()}
                             </p>
@@ -178,3 +192,4 @@ const AITutor = () => {
 };
 
 export default AITutor;
+
