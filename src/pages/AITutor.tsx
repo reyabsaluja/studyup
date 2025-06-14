@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -76,6 +77,12 @@ const AITutor = () => {
     }
   };
 
+  // Scroll to bottom on new message
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Inject animation CSS style */}
@@ -118,30 +125,31 @@ const AITutor = () => {
               </p>
             </div>
 
-            <Card className="h-[600px] flex flex-col">
+            {/* Set a fixed height and flex for chat card */}
+            <Card className="flex flex-col h-[600px] max-h-full bg-black bg-opacity-95">
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Brain className="h-5 w-5 mr-2" />
-                  Chat with AI Tutor (Powered by Gemini 2.0 Flash)
+                  <span className="text-white">Chat with AI Tutor (Powered by Gemini 2.0 Flash)</span>
                   {courseContext && (
-                    <span className="ml-2 text-sm font-normal text-gray-500">
+                    <span className="ml-2 text-sm font-normal text-gray-400">
                       - {courseContext.courseName}
                     </span>
                   )}
                 </CardTitle>
               </CardHeader>
 
-              <CardContent className="flex-1 flex flex-col">
-                {/* Custom scrollable container for messages */}
-                <div className="flex-1 mb-4 pr-4 overflow-y-auto" style={{ minHeight: 0 }}>
+              {/* Main chat area: scrollable messages, input always at bottom */}
+              <CardContent className="flex flex-col flex-1 p-0">
+                <ScrollArea className="flex-1 px-6 pb-4 pt-0 max-h-full">
                   <div className="space-y-4">
                     {messages.length === 0 ? (
-                      <div className="text-center text-gray-500 py-8">
-                        <Brain className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <div className="text-center text-gray-400 py-8">
+                        <Brain className="h-12 w-12 mx-auto mb-4 text-gray-700" />
                         <p>
                           {courseContext
                             ? `Ready to help you with ${courseContext.courseName}!`
-                            : 'Start a conversation with your AI tutor!'
+                            : "Start a conversation with your AI tutor!"
                           }
                         </p>
                         <p className="text-sm mt-2">Ask questions about any subject, request explanations, or get study tips.</p>
@@ -164,11 +172,7 @@ const AITutor = () => {
                           >
                             {message.role === 'assistant' ? (
                               <div className="prose prose-sm break-words whitespace-pre-wrap">
-                                <ReactMarkdown
-                                  components={{
-                                    // Optionally style code blocks, lists, etc.
-                                  }}
-                                >
+                                <ReactMarkdown>
                                   {message.content}
                                 </ReactMarkdown>
                               </div>
@@ -193,10 +197,14 @@ const AITutor = () => {
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                <div className="flex space-x-2">
+                    {/* Always scroll to the latest message */}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </ScrollArea>
+
+                {/* Input stays pinned at the bottom of the card */}
+                <div className="flex space-x-2 px-6 py-4 border-t border-gray-800 bg-black bg-opacity-95">
                   <Input
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
@@ -207,7 +215,7 @@ const AITutor = () => {
                         : "Ask your AI tutor anything..."
                     }
                     disabled={isLoading}
-                    className="flex-1"
+                    className="flex-1 bg-gray-900 text-white border-gray-700"
                   />
                   <Button
                     onClick={handleSendMessage}
@@ -226,3 +234,4 @@ const AITutor = () => {
 };
 
 export default AITutor;
+
