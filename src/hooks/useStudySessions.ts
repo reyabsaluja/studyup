@@ -2,11 +2,38 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { Database } from '@/integrations/supabase/types';
 
-type StudySession = Database['public']['Tables']['study_sessions']['Row'];
-type StudySessionInsert = Database['public']['Tables']['study_sessions']['Insert'];
-type StudySessionUpdate = Database['public']['Tables']['study_sessions']['Update'];
+// Define the study session types directly since they might not be in the generated types yet
+type StudySession = {
+  id: string;
+  user_id: string;
+  course_id: string;
+  title: string;
+  description: string | null;
+  scheduled_date: string;
+  duration: number;
+  completed: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+type StudySessionInsert = {
+  course_id: string;
+  title: string;
+  description?: string;
+  scheduled_date: string;
+  duration: number;
+  completed?: boolean;
+};
+
+type StudySessionUpdate = {
+  course_id?: string;
+  title?: string;
+  description?: string;
+  scheduled_date?: string;
+  duration?: number;
+  completed?: boolean;
+};
 
 export const useStudySessions = () => {
   const queryClient = useQueryClient();
@@ -28,13 +55,17 @@ export const useStudySessions = () => {
   });
 
   const createStudySessionMutation = useMutation({
-    mutationFn: async (newSession: Omit<StudySessionInsert, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+    mutationFn: async (newSession: StudySessionInsert) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
         .from('study_sessions')
-        .insert({ ...newSession, user_id: user.id })
+        .insert({ 
+          ...newSession, 
+          user_id: user.id,
+          completed: newSession.completed || false 
+        })
         .select()
         .single();
 
