@@ -32,6 +32,10 @@ const Courses = () => {
     });
   };
 
+  const handleViewCourse = (courseId: string) => {
+    navigate(`/courses/${courseId}`);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
@@ -83,7 +87,11 @@ const Courses = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {courses.map((course) => (
-                <Card key={course.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+                <Card 
+                  key={course.id} 
+                  className="hover:shadow-lg transition-shadow cursor-pointer"
+                  onClick={() => handleViewCourse(course.id)}
+                >
                   <CardHeader className="pb-4">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center space-x-3">
@@ -129,14 +137,25 @@ const Courses = () => {
                       </div>
 
                       <div className="flex space-x-2 pt-2">
-                        <Button size="sm" variant="outline" className="flex-1">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="flex-1"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewCourse(course.id);
+                          }}
+                        >
                           <BookOpen className="h-4 w-4 mr-1" />
                           View
                         </Button>
                         <Button 
                           size="sm" 
                           className="flex-1"
-                          onClick={() => handleAskAI(course.id, course.name)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAskAI(course.id, course.name);
+                          }}
                         >
                           <Brain className="h-4 w-4 mr-1" />
                           Ask AI

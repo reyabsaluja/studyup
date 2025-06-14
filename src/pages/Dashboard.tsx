@@ -1,18 +1,19 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Calendar, FileText, Brain, TrendingUp, Target, Clock } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import UserMenu from "@/components/UserMenu";
 import { useNavigate } from "react-router-dom";
+import { useDashboardStats } from "@/hooks/useDashboardStats";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { stats, isLoading } = useDashboardStats();
 
-  const stats = [
+  const statsData = [
     {
       title: "Active Courses",
-      value: "4",
+      value: isLoading ? "-" : stats.activeCourses.toString(),
       description: "Currently enrolled",
       icon: BookOpen,
       color: "text-blue-600"
@@ -26,14 +27,14 @@ const Dashboard = () => {
     },
     {
       title: "Assignments Due",
-      value: "3",
+      value: isLoading ? "-" : stats.assignmentsDue.toString(),
       description: "This week",
       icon: Target,
       color: "text-orange-600"
     },
     {
       title: "Study Hours",
-      value: "28",
+      value: isLoading ? "-" : stats.studyHours.toString(),
       description: "This month",
       icon: Clock,
       color: "text-purple-600"
@@ -73,7 +74,7 @@ const Dashboard = () => {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            {stats.map((stat) => {
+            {statsData.map((stat) => {
               const Icon = stat.icon;
               return (
                 <Card key={stat.title}>
