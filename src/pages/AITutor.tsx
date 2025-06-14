@@ -132,7 +132,7 @@ const AITutor = () => {
               </CardHeader>
 
               <CardContent className="flex-1 flex flex-col">
-                {/* Custom scrollable container for messages */}
+                {/* Chat messages scrollable container */}
                 <div className="flex-1 mb-4 pr-4 overflow-y-auto" style={{ minHeight: 0 }}>
                   <div className="space-y-4">
                     {messages.length === 0 ? (
@@ -153,22 +153,24 @@ const AITutor = () => {
                           className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[80%] break-words whitespace-pre-wrap p-3 rounded-lg overflow-x-auto transition-colors
+                            className={`max-w-[80%] p-3 rounded-lg transition-colors
                               ${message.role === 'user'
                                   ? 'bg-blue-600 text-white'
                                   : 'bg-gray-100 text-gray-900'
                               }
                               ${message.role === 'assistant' && message.id === highlightId ? 'ai-highlight' : ''}
                             `}
-                            style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
+                            style={{
+                              wordBreak: 'break-word',
+                              overflowWrap: 'anywhere',
+                              overflow: 'hidden',
+                              whiteSpace: 'pre-wrap',
+                              textOverflow: 'ellipsis',
+                            }}
                           >
                             {message.role === 'assistant' ? (
                               <div className="prose prose-sm break-words whitespace-pre-wrap">
-                                <ReactMarkdown
-                                  components={{
-                                    // Optionally style code blocks, lists, etc.
-                                  }}
-                                >
+                                <ReactMarkdown>
                                   {message.content}
                                 </ReactMarkdown>
                               </div>
