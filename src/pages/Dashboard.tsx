@@ -23,7 +23,7 @@ const Dashboard = () => {
     },
     {
       title: "Completed Tasks",
-      value: isLoading ? "-" : stats.totalAssignments.toString(),
+      value: isLoading ? "-" : stats.completedAssignments.toString(),
       description: "All time",
       icon: CheckCircle,
       color: "text-green-600"
@@ -36,10 +36,10 @@ const Dashboard = () => {
       color: "text-orange-600"
     },
     {
-      title: "Total Notes",
-      value: "24",
-      description: "Created notes",
-      icon: FileText,
+      title: "Current Progress",
+      value: isLoading || stats.totalAssignments === 0 ? "-" : `${stats.completedAssignments} / ${stats.totalAssignments}`,
+      description: "Assignments completed",
+      icon: Brain,
       color: "text-purple-600"
     }
   ];
