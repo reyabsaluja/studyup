@@ -45,7 +45,7 @@ export const useStudySessions = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('study_sessions')
+        .from('study_sessions' as any)
         .select('*')
         .order('scheduled_date', { ascending: true });
 
@@ -60,7 +60,7 @@ export const useStudySessions = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('study_sessions')
+        .from('study_sessions' as any)
         .insert({ 
           ...newSession, 
           user_id: user.id,
@@ -108,7 +108,7 @@ export const useStudySessions = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('study_sessions')
+        .from('study_sessions' as any)
         .update(updates)
         .eq('id', id)
         .select()
@@ -154,7 +154,7 @@ export const useStudySessions = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase
-        .from('study_sessions')
+        .from('study_sessions' as any)
         .delete()
         .eq('id', session.id);
 
