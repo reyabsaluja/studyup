@@ -58,9 +58,13 @@ const AddStudySessionDialog = ({ open, onOpenChange, selectedDate }: AddStudySes
   }, [selectedDate, form]);
 
   const onSubmit = (data: FormData) => {
+    // Ensure all required fields are present and properly typed
     createStudySession({
-      ...data,
+      title: data.title,
+      course_id: data.course_id,
+      description: data.description || '',
       scheduled_date: data.scheduled_date.toISOString(),
+      duration: data.duration,
       completed: false,
     });
     onOpenChange(false);
