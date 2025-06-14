@@ -113,7 +113,7 @@ const Auth = () => {
               <Brain className="h-7 w-7 text-white" />
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">Taski</h1>
+          <h1 className="text-2xl font-bold text-gray-900">StudyUp</h1>
           <p className="text-gray-600 mt-2">Your AI-powered learning companion</p>
         </div>
 
