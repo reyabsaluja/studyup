@@ -10,11 +10,8 @@ const Index = () => {
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-6 py-4">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <Brain className="h-5 w-5 text-white" />
-            </div>
-            <h1 className="text-xl font-semibold text-gray-900">Taski</h1>
+          <div className="flex items-center">
+            <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
           </div>
           <div className="flex items-center space-x-4">
             <Button variant="outline" size="sm">
