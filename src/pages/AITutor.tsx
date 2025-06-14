@@ -1,10 +1,11 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Brain, Send, Trash2 } from 'lucide-react';
+import { Brain, Send, Trash2, FileText } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import { useGeminiChat } from '@/hooks/useGeminiChat';
@@ -148,6 +149,16 @@ const AITutor = () => {
               </CardHeader>
 
               <CardContent className="flex-1 flex flex-col overflow-hidden">
+                {/* Course material context indicator */}
+                {materials && materials.length > 0 && (
+                  <div className="mb-4 p-3 rounded-md bg-blue-50 border border-blue-200 text-sm text-blue-800 flex items-center space-x-2">
+                    <FileText className="h-5 w-5 flex-shrink-0" />
+                    <span>
+                      This chat has context from {materials.length} course material(s). The AI will use this to better answer your questions.
+                    </span>
+                  </div>
+                )}
+                
                 {/* Chat messages scrollable container */}
                 <ScrollArea className="flex-1 mb-4 pr-4">
                   <div className="space-y-4">
