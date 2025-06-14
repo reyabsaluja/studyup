@@ -141,7 +141,7 @@ const AITutor = () => {
                         <p>
                           {courseContext
                             ? `Ready to help you with ${courseContext.courseName}!`
-                            : 'Start a conversation with your AI tutor!'
+                            : "Start a conversation with your AI tutor!"
                           }
                         </p>
                         <p className="text-sm mt-2">Ask questions about any subject, request explanations, or get study tips.</p>
@@ -153,7 +153,7 @@ const AITutor = () => {
                           className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
                         >
                           <div
-                            className={`max-w-[80%] p-3 rounded-lg transition-colors
+                            className={`max-w-[80%] md:max-w-[65%] w-full p-3 rounded-lg transition-colors
                               ${message.role === 'user'
                                   ? 'bg-blue-600 text-white'
                                   : 'bg-gray-100 text-gray-900'
@@ -166,11 +166,44 @@ const AITutor = () => {
                               overflow: 'hidden',
                               whiteSpace: 'pre-wrap',
                               textOverflow: 'ellipsis',
+                              maxWidth: '100%',
+                              minWidth: 0,
                             }}
                           >
                             {message.role === 'assistant' ? (
-                              <div className="prose prose-sm break-words whitespace-pre-wrap">
-                                <ReactMarkdown>
+                              <div
+                                className="prose prose-sm break-words whitespace-pre-wrap max-w-full overflow-x-auto"
+                                style={{
+                                  maxWidth: '100%',
+                                  minWidth: 0,
+                                  overflowX: 'auto', // So code/markdown blocks can scroll horizontally!
+                                  wordBreak: 'break-word',
+                                }}
+                              >
+                                <ReactMarkdown
+                                  components={{
+                                    // Clamp super long words and enable horizontal scroll for code/tables within markdown!
+                                    code: ({node, ...props}) => (
+                                      <code
+                                        style={{ wordBreak: 'break-all', overflowX: 'auto', maxWidth: '100%' }}
+                                        className="inline-block max-w-full break-all overflow-x-auto"
+                                        {...props}
+                                      />
+                                    ),
+                                    pre: ({node, ...props}) => (
+                                      <pre
+                                        style={{ overflowX: 'auto', maxWidth: '100%' }}
+                                        className="max-w-full overflow-x-auto"
+                                        {...props}
+                                      />
+                                    ),
+                                    table: ({node, ...props}) => (
+                                      <div style={{ overflowX: 'auto', maxWidth: '100%' }}>
+                                        <table className="max-w-full" {...props} />
+                                      </div>
+                                    ),
+                                  }}
+                                >
                                   {message.content}
                                 </ReactMarkdown>
                               </div>
