@@ -138,7 +138,7 @@ const Planner = () => {
                         onSelect={(date) => date && handleDateClick(date)}
                         className="rounded-md border w-full max-w-md"
                         components={{
-                          Day: ({ date, ...props }) => {
+                          Day: ({ date }) => {
                             const hasStudySessions = getSessionsForDate(date).length > 0;
                             const hasAssignments = getAssignmentsForDate(date).length > 0;
                             const isSelected = selectedDate && isSameDay(date, selectedDate);
@@ -146,12 +146,11 @@ const Planner = () => {
                             return (
                               <div className="relative">
                                 <button
-                                  {...props}
-                                  className={`${props.className || ''} ${
+                                  className={`relative w-9 h-9 p-0 font-normal aria-selected:opacity-100 ${
                                     isSelected
                                       ? 'bg-primary text-primary-foreground rounded-lg'
                                       : ''
-                                  } relative w-9 h-9 p-0 font-normal aria-selected:opacity-100`}
+                                  }`}
                                   onClick={() => handleDateClick(date)}
                                 >
                                   {date.getDate()}

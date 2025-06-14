@@ -50,7 +50,7 @@ export const useStudySessions = () => {
         .order('scheduled_date', { ascending: true });
 
       if (error) throw error;
-      return (data || []) as StudySession[];
+      return (data ?? []) as StudySession[];
     },
   });
 
@@ -69,14 +69,14 @@ export const useStudySessions = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error || !data) throw error ?? new Error("Failed to create session");
 
       // Get course name for activity tracking
       const { data: course } = await supabase
         .from('courses')
         .select('name')
         .eq('id', newSession.course_id)
-        .single();
+        .maybeSingle();
 
       // Track activity
       await supabase
@@ -114,7 +114,7 @@ export const useStudySessions = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error || !data) throw error ?? new Error("Failed to update session");
 
       // Track activity if completed status changed
       if (updates.completed !== undefined) {
@@ -122,7 +122,7 @@ export const useStudySessions = () => {
           .from('courses')
           .select('name')
           .eq('id', (data as StudySession).course_id)
-          .single();
+          .maybeSingle();
 
         await supabase
           .from('activities')
@@ -165,7 +165,7 @@ export const useStudySessions = () => {
         .from('courses')
         .select('name')
         .eq('id', session.course_id)
-        .single();
+        .maybeSingle();
 
       await supabase
         .from('activities')
@@ -202,3 +202,5 @@ export const useStudySessions = () => {
     isDeleting: deleteStudySessionMutation.isPending,
   };
 };
+
+// ...end of file

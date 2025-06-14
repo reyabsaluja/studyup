@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -130,14 +129,15 @@ const AITutor = () => {
                             style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}
                           >
                             {message.role === 'assistant' ? (
-                              <ReactMarkdown
-                                className="prose prose-sm break-words whitespace-pre-wrap"
-                                components={{
-                                  // Optionally style code blocks, lists, etc.
-                                }}
-                              >
-                                {message.content}
-                              </ReactMarkdown>
+                              <div className="prose prose-sm break-words whitespace-pre-wrap">
+                                <ReactMarkdown
+                                  components={{
+                                    // Optionally style code blocks, lists, etc.
+                                  }}
+                                >
+                                  {message.content}
+                                </ReactMarkdown>
+                              </div>
                             ) : (
                               <p className="text-sm break-words whitespace-pre-wrap">{message.content}</p>
                             )}
@@ -192,4 +192,3 @@ const AITutor = () => {
 };
 
 export default AITutor;
-
