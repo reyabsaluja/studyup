@@ -2,199 +2,124 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
 
-// Define the study session types directly since they might not be in the generated types yet
-type StudySession = {
-  id: string;
-  user_id: string;
-  course_id: string;
-  title: string;
-  description: string | null;
-  scheduled_date: string;
-  duration: number;
-  completed: boolean;
-  created_at: string;
-  updated_at: string;
-};
+type StudySession = Database['public']['Tables']['study_sessions']['Row'];
+type StudySessionInsert = Database['public']['Tables']['study_sessions']['Insert'];
+type StudySessionUpdate = Database['public']['Tables']['study_sessions']['Update'];
+type Course = Database['public']['Tables']['courses']['Row'];
 
-type StudySessionInsert = {
-  course_id: string;
-  title: string;
-  description?: string;
-  scheduled_date: string;
-  duration: number;
-  completed?: boolean;
-};
+export interface StudySessionWithCourse extends StudySession {
+  courses: Pick<Course, 'id' | 'name' | 'color'> | null;
+}
 
-type StudySessionUpdate = {
-  course_id?: string;
-  title?: string;
-  description?: string;
-  scheduled_date?: string;
-  duration?: number;
-  completed?: boolean;
-};
-
-export const useStudySessions = () => {
+export const useStudySessions = (courseId?: string) => {
   const queryClient = useQueryClient();
 
   const { data: studySessions = [], isLoading, error } = useQuery({
-    queryKey: ['studySessions'],
-    queryFn: async (): Promise<StudySession[]> => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (!user || userError) throw new Error('Not authenticated');
+    queryKey: ['studySessions', courseId],
+    queryFn: async (): Promise<StudySessionWithCourse[]> => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
 
-      const { data, error } = await supabase
-        .from('study_sessions' as any)
-        .select('*')
-        .order('scheduled_date', { ascending: true });
+      let sessionQuery = supabase.from('study_sessions').select('*').eq('user_id', user.id);
+      if (courseId) {
+        sessionQuery = sessionQuery.eq('course_id', courseId);
+      }
 
-      if (error) throw error;
-      if (!Array.isArray(data)) return [];
-      // Additional runtime filter to ensure the type
-      return data.filter((s) =>
-        s &&
-        typeof s.id === 'string' &&
-        typeof s.user_id === 'string' &&
-        typeof s.course_id === 'string'
-      ) as StudySession[];
+      const { data: sessions, error: sessionsError } = await sessionQuery.order('scheduled_date', { ascending: true });
+
+      if (sessionsError) {
+        toast.error(`Failed to fetch study sessions: ${sessionsError.message}`);
+        throw sessionsError;
+      }
+      if (!sessions) return [];
+
+      const courseIds = [...new Set(sessions.map(s => s.course_id))];
+      if (courseIds.length === 0) {
+        return sessions.map(s => ({ ...s, courses: null }));
+      }
+
+      const { data: courses, error: coursesError } = await supabase
+        .from('courses')
+        .select('id, name, color')
+        .in('id', courseIds);
+      
+      if (coursesError) {
+        toast.error(`Failed to fetch course details for sessions: ${coursesError.message}`);
+        // Return sessions without course details instead of failing the whole query
+        return sessions.map(s => ({ ...s, courses: null }));
+      }
+
+      const coursesMap = new Map(courses.map(c => [c.id, c as Pick<Course, 'id' | 'name' | 'color'>]));
+
+      return sessions.map(s => ({
+        ...s,
+        courses: coursesMap.get(s.course_id) || null,
+      }));
     },
   });
 
   const createStudySessionMutation = useMutation({
-    mutationFn: async (newSession: StudySessionInsert) => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (!user || userError) throw new Error('Not authenticated');
+    mutationFn: async (newSession: Omit<StudySessionInsert, 'user_id'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('study_sessions' as any)
-        .insert({ 
-          ...newSession, 
-          user_id: user.id,
-          completed: newSession.completed || false 
-        })
+        .from('study_sessions')
+        .insert({ ...newSession, user_id: user.id })
         .select()
         .single();
 
-      if (error || !data) throw error ?? new Error("Failed to create session");
-
-      // Get course name for activity tracking
-      const { data: course } = await supabase
-        .from('courses')
-        .select('name')
-        .eq('id', newSession.course_id)
-        .maybeSingle();
-
-      // Track activity
-      await supabase
-        .from('activities')
-        .insert({
-          user_id: user.id,
-          activity_type: 'study_session_created',
-          activity_description: `Created study session: ${newSession.title}`,
-          related_course_id: newSession.course_id,
-          related_course_name: course?.name || 'Unknown Course',
-        });
-
-      // No need to cast, we just validated it's a StudySession
-      return data as StudySession;
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['studySessions'] });
-      queryClient.invalidateQueries({ queryKey: ['activities'] });
-      toast.success('Study session created successfully!');
+      toast.success('Study session created!');
     },
-    onError: (error) => {
-      console.error('Error creating study session:', error);
-      toast.error('Failed to create study session');
+    onError: (err: Error) => {
+      toast.error(`Failed to create session: ${err.message}`);
     },
   });
 
   const updateStudySessionMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: StudySessionUpdate }) => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (!user || userError) throw new Error('Not authenticated');
-
+    mutationFn: async (session: { id: string } & Partial<StudySessionUpdate>) => {
+      const { id, ...updateData } = session;
       const { data, error } = await supabase
-        .from('study_sessions' as any)
-        .update(updates)
+        .from('study_sessions')
+        .update(updateData)
         .eq('id', id)
         .select()
         .single();
-
-      if (error || !data) throw error ?? new Error("Failed to update session");
-
-      // Track activity if completed status changed
-      if (updates.completed !== undefined) {
-        const { data: course } = await supabase
-          .from('courses')
-          .select('name')
-          .eq('id', (data as StudySession).course_id)
-          .maybeSingle();
-
-        await supabase
-          .from('activities')
-          .insert({
-            user_id: user.id,
-            activity_type: updates.completed ? 'study_session_completed' : 'study_session_updated',
-            activity_description: `${updates.completed ? 'Completed' : 'Updated'} study session: ${(data as StudySession).title}`,
-            related_course_id: (data as StudySession).course_id,
-            related_course_name: course?.name || 'Unknown Course',
-          });
-      }
-
-      return data as StudySession;
+        
+      if (error) throw error;
+      return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['studySessions'] });
-      queryClient.invalidateQueries({ queryKey: ['activities'] });
-      toast.success('Study session updated successfully!');
+      toast.success('Study session updated!');
     },
-    onError: (error) => {
-      console.error('Error updating study session:', error);
-      toast.error('Failed to update study session');
+    onError: (err: Error) => {
+      toast.error(`Failed to update session: ${err.message}`);
     },
   });
 
   const deleteStudySessionMutation = useMutation({
-    mutationFn: async (session: StudySession) => {
-      const { data: { user }, error: userError } = await supabase.auth.getUser();
-      if (!user || userError) throw new Error('Not authenticated');
-
+    mutationFn: async (sessionId: string) => {
       const { error } = await supabase
-        .from('study_sessions' as any)
+        .from('study_sessions')
         .delete()
-        .eq('id', session.id);
+        .eq('id', sessionId);
 
       if (error) throw error;
-
-      // Track activity
-      const { data: course } = await supabase
-        .from('courses')
-        .select('name')
-        .eq('id', session.course_id)
-        .maybeSingle();
-
-      await supabase
-        .from('activities')
-        .insert({
-          user_id: user.id,
-          activity_type: 'study_session_deleted',
-          activity_description: `Deleted study session: ${session.title}`,
-          related_course_id: session.course_id,
-          related_course_name: course?.name || 'Unknown Course',
-        });
-
-      return session;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['studySessions'] });
-      queryClient.invalidateQueries({ queryKey: ['activities'] });
-      toast.success('Study session deleted successfully!');
+      toast.success('Study session deleted!');
     },
-    onError: (error) => {
-      console.error('Error deleting study session:', error);
-      toast.error('Failed to delete study session');
+    onError: (err: Error) => {
+      toast.error(`Failed to delete session: ${err.message}`);
     },
   });
 
@@ -202,14 +127,11 @@ export const useStudySessions = () => {
     studySessions,
     isLoading,
     error,
-    createStudySession: createStudySessionMutation.mutate,
-    updateStudySession: updateStudySessionMutation.mutate,
-    deleteStudySession: deleteStudySessionMutation.mutate,
+    createStudySession: createStudySessionMutation.mutateAsync,
+    updateStudySession: updateStudySessionMutation.mutateAsync,
+    deleteStudySession: deleteStudySessionMutation.mutateAsync,
     isCreating: createStudySessionMutation.isPending,
     isUpdating: updateStudySessionMutation.isPending,
     isDeleting: deleteStudySessionMutation.isPending,
   };
 };
-
-// ...end of file
-
