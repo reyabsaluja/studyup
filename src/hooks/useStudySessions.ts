@@ -44,9 +44,8 @@ export const useStudySessions = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Use raw query since the table isn't in generated types yet
       const { data, error } = await supabase
-        .from('study_sessions' as any)
+        .from('study_sessions')
         .select('*')
         .order('scheduled_date', { ascending: true });
 
@@ -61,7 +60,7 @@ export const useStudySessions = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('study_sessions' as any)
+        .from('study_sessions')
         .insert({ 
           ...newSession, 
           user_id: user.id,
@@ -109,7 +108,7 @@ export const useStudySessions = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { data, error } = await supabase
-        .from('study_sessions' as any)
+        .from('study_sessions')
         .update(updates)
         .eq('id', id)
         .select()
@@ -155,7 +154,7 @@ export const useStudySessions = () => {
       if (!user) throw new Error('Not authenticated');
 
       const { error } = await supabase
-        .from('study_sessions' as any)
+        .from('study_sessions')
         .delete()
         .eq('id', session.id);
 

@@ -148,7 +148,7 @@ const Planner = () => {
                               <div className="relative">
                                 <button 
                                   {...props} 
-                                  className={`${props.className} ${isSelected ? 'bg-primary text-primary-foreground' : ''} relative w-9 h-9 p-0 font-normal aria-selected:opacity-100`}
+                                  className={`${props.className || ''} ${isSelected ? 'bg-primary text-primary-foreground' : ''} relative w-9 h-9 p-0 font-normal aria-selected:opacity-100`}
                                   onClick={() => handleDateClick(date)}
                                 >
                                   {date.getDate()}
