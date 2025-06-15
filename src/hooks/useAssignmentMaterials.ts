@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -30,9 +29,8 @@ export const useAssignmentMaterials = (assignmentId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      const filePath = `public/assignment_materials/${user.id}/${newMaterial.assignment_id}/${Date.now()}-${newMaterial.file.name}`;
+      const filePath = `assignment_materials/${user.id}/${newMaterial.assignment_id}/${Date.now()}-${newMaterial.file.name}`;
       
-      // We will use the 'course-materials' bucket for now.
       const { error: uploadError } = await supabase.storage
         .from('course-materials')
         .upload(filePath, newMaterial.file);

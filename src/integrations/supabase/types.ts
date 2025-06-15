@@ -382,6 +382,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_course_owner: {
+        Args: { p_course_id: string }
+        Returns: boolean
+      }
       is_course_owner_for_assignment: {
         Args: { p_assignment_id: string }
         Returns: boolean
