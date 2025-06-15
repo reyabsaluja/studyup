@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, BookOpen, Target }
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import AddEventPopover from '@/components/AddEventPopover';
 
 interface Assignment {
   id: string;
@@ -36,6 +37,8 @@ interface CustomCalendarProps {
   assignments: Assignment[];
   studySessions: StudySession[];
   courses: Course[];
+  onAddStudySession?: () => void;
+  onAddAssignment?: () => void;
 }
 
 const CustomCalendar: React.FC<CustomCalendarProps> = ({
@@ -43,9 +46,13 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
   onDateSelect,
   assignments,
   studySessions,
-  courses
+  courses,
+  onAddStudySession,
+  onAddAssignment
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [showPopover, setShowPopover] = useState(false);
+  const [popoverDate, setPopoverDate] = useState<Date | null>(null);
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(monthStart);
@@ -87,6 +94,30 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
     const today = new Date();
     setCurrentMonth(today);
     onDateSelect(today);
+  };
+
+  const handleDayClick = (date: Date) => {
+    onDateSelect(date);
+  };
+
+  const handleDayDoubleClick = (date: Date) => {
+    setPopoverDate(date);
+    onDateSelect(date);
+    setShowPopover(true);
+  };
+
+  const handleAddStudySession = () => {
+    setShowPopover(false);
+    if (onAddStudySession) {
+      onAddStudySession();
+    }
+  };
+
+  const handleAddAssignment = () => {
+    setShowPopover(false);
+    if (onAddAssignment) {
+      onAddAssignment();
+    }
   };
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -159,7 +190,9 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
                   ${isSelected ? 'bg-blue-50 border-blue-200' : ''}
                   ${!isCurrentMonth ? 'text-gray-300 bg-gray-50/50' : ''}
                 `}
-                onClick={() => onDateSelect(day)}
+                onClick={() => handleDayClick(day)}
+                onDoubleClick={() => handleDayDoubleClick(day)}
+                title="Double-click to add event"
               >
                 <div className="flex flex-col h-full">
                   <div className="flex items-center justify-between mb-1">
@@ -212,6 +245,49 @@ const CustomCalendar: React.FC<CustomCalendarProps> = ({
           })}
         </div>
       </div>
+
+      {/* Popover for adding events on double-click */}
+      {showPopover && popoverDate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-white rounded-lg p-4 shadow-lg border max-w-sm w-full mx-4">
+            <div className="space-y-3">
+              <div className="text-sm font-medium text-gray-700">
+                Add to {popoverDate.toLocaleDateString('en-US', { 
+                  weekday: 'long', 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </div>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleAddStudySession}
+                >
+                  <BookOpen className="h-4 w-4 mr-2 text-blue-500" />
+                  Study Session
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleAddAssignment}
+                >
+                  <Target className="h-4 w-4 mr-2 text-green-500" />
+                  Assignment
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={() => setShowPopover(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -144,6 +145,8 @@ const Planner = () => {
                     assignments={assignments}
                     studySessions={studySessions}
                     courses={courses}
+                    onAddStudySession={handleAddStudySession}
+                    onAddAssignment={handleAddAssignment}
                   />
                   
                   {/* Selected Date Events */}
