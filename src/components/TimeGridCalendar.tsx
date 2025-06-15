@@ -2,6 +2,7 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { format, startOfWeek, addDays, addHours, startOfDay, isToday, isSameDay } from 'date-fns';
 import { Card, CardContent } from '@/components/ui/card';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Clock, BookOpen, Target } from 'lucide-react';
 
@@ -153,10 +154,10 @@ const TimeGridCalendar = ({
 
   return (
     <Card className="h-full">
-      <CardContent className="p-0">
+      <CardContent className="p-0 h-full">
         <div className="flex flex-col h-full">
           {/* Header with days */}
-          <div className="grid grid-cols-8 border-b bg-gray-50">
+          <div className="grid grid-cols-8 border-b bg-gray-50 sticky top-0 z-10">
             <div className="p-2 text-sm font-medium text-gray-500 border-r">Time</div>
             {weekDays.map((day, index) => (
               <div 
@@ -172,65 +173,67 @@ const TimeGridCalendar = ({
             ))}
           </div>
           
-          {/* Time grid */}
-          <div 
-            ref={calendarRef} 
-            className="flex-1 overflow-auto"
-            onMouseLeave={handleMouseLeave}
-          >
-            {timeSlots.map((timeSlot) => (
-              <div key={timeSlot.hour} className="grid grid-cols-8 border-b hover:bg-gray-50">
-                {/* Time label */}
-                <div className="p-2 text-xs text-gray-500 border-r bg-gray-50 font-medium">
-                  {timeSlot.label}
-                </div>
-                
-                {/* Day columns */}
-                {weekDays.map((day, dayIndex) => {
-                  const events = getEventsForTimeSlot(dayIndex, timeSlot.hour);
-                  const isSelected = isSlotSelected(dayIndex, timeSlot.hour);
+          {/* Scrollable time grid */}
+          <ScrollArea className="flex-1">
+            <div 
+              ref={calendarRef} 
+              className="min-h-full"
+              onMouseLeave={handleMouseLeave}
+            >
+              {timeSlots.map((timeSlot) => (
+                <div key={timeSlot.hour} className="grid grid-cols-8 border-b hover:bg-gray-50">
+                  {/* Time label */}
+                  <div className="p-2 text-xs text-gray-500 border-r bg-gray-50 font-medium sticky left-0">
+                    {timeSlot.label}
+                  </div>
                   
-                  return (
-                    <div
-                      key={`${dayIndex}-${timeSlot.hour}`}
-                      className={`p-1 border-r last:border-r-0 min-h-[40px] cursor-pointer transition-colors select-none ${
-                        isSelected ? 'bg-blue-200' : 'hover:bg-gray-100'
-                      }`}
-                      onMouseDown={(e) => handleMouseDown(dayIndex, timeSlot.hour, e)}
-                      onMouseEnter={() => handleMouseEnter(dayIndex, timeSlot.hour)}
-                      onMouseUp={handleMouseUp}
-                    >
-                      {events.map((event, eventIndex) => {
-                        const course = courses.find(c => c.id === event.course_id);
-                        return (
-                          <div
-                            key={eventIndex}
-                            className={`text-xs p-1 rounded mb-1 ${
-                              event.type === 'study' 
-                                ? 'bg-blue-100 text-blue-800 border-l-2 border-blue-400' 
-                                : 'bg-green-100 text-green-800 border-l-2 border-green-400'
-                            }`}
-                          >
-                            <div className="flex items-center gap-1">
-                              {event.type === 'study' ? (
-                                <BookOpen className="h-3 w-3" />
-                              ) : (
-                                <Target className="h-3 w-3" />
+                  {/* Day columns */}
+                  {weekDays.map((day, dayIndex) => {
+                    const events = getEventsForTimeSlot(dayIndex, timeSlot.hour);
+                    const isSelected = isSlotSelected(dayIndex, timeSlot.hour);
+                    
+                    return (
+                      <div
+                        key={`${dayIndex}-${timeSlot.hour}`}
+                        className={`p-1 border-r last:border-r-0 min-h-[40px] cursor-pointer transition-colors select-none ${
+                          isSelected ? 'bg-blue-200' : 'hover:bg-gray-100'
+                        }`}
+                        onMouseDown={(e) => handleMouseDown(dayIndex, timeSlot.hour, e)}
+                        onMouseEnter={() => handleMouseEnter(dayIndex, timeSlot.hour)}
+                        onMouseUp={handleMouseUp}
+                      >
+                        {events.map((event, eventIndex) => {
+                          const course = courses.find(c => c.id === event.course_id);
+                          return (
+                            <div
+                              key={eventIndex}
+                              className={`text-xs p-1 rounded mb-1 ${
+                                event.type === 'study' 
+                                  ? 'bg-blue-100 text-blue-800 border-l-2 border-blue-400' 
+                                  : 'bg-green-100 text-green-800 border-l-2 border-green-400'
+                              }`}
+                            >
+                              <div className="flex items-center gap-1">
+                                {event.type === 'study' ? (
+                                  <BookOpen className="h-3 w-3" />
+                                ) : (
+                                  <Target className="h-3 w-3" />
+                                )}
+                                <span className="font-medium truncate">{event.title}</span>
+                              </div>
+                              {course && (
+                                <div className="text-gray-600 truncate">{course.name}</div>
                               )}
-                              <span className="font-medium truncate">{event.title}</span>
                             </div>
-                            {course && (
-                              <div className="text-gray-600 truncate">{course.name}</div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            ))}
-          </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
         </div>
       </CardContent>
     </Card>
