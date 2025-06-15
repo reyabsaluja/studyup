@@ -33,6 +33,7 @@ const TimeGridCalendar = ({
   const [dragStart, setDragStart] = useState<{ day: number; hour: number } | null>(null);
   const [dragEnd, setDragEnd] = useState<{ day: number; hour: number } | null>(null);
   const calendarRef = useRef<HTMLDivElement>(null);
+  const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Generate time slots from 12 AM to 11 PM
   const timeSlots: TimeSlot[] = Array.from({ length: 24 }, (_, i) => ({
@@ -44,7 +45,8 @@ const TimeGridCalendar = ({
   const weekStart = startOfWeek(selectedDate, { weekStartsOn: 0 });
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
-  const handleMouseDown = (dayIndex: number, hour: number) => {
+  const handleMouseDown = (dayIndex: number, hour: number, event: React.MouseEvent) => {
+    event.preventDefault();
     setIsDragging(true);
     setDragStart({ day: dayIndex, hour });
     setDragEnd({ day: dayIndex, hour });
@@ -56,26 +58,41 @@ const TimeGridCalendar = ({
     }
   };
 
-  const handleMouseUp = () => {
+  const handleMouseUp = (event: React.MouseEvent) => {
     if (isDragging && dragStart && dragEnd && onTimeSlotSelect) {
-      const startDay = weekDays[dragStart.day];
-      const endDay = weekDays[dragEnd.day];
-      
-      // For now, only allow selection within the same day
+      // Only trigger if same day for now
       if (dragStart.day === dragEnd.day) {
+        const startDay = weekDays[dragStart.day];
+        const endDay = weekDays[dragEnd.day];
+        
         const minHour = Math.min(dragStart.hour, dragEnd.hour);
         const maxHour = Math.max(dragStart.hour, dragEnd.hour);
         
         const startTime = addHours(startOfDay(startDay), minHour);
         const endTime = addHours(startOfDay(endDay), maxHour + 1);
         
-        onTimeSlotSelect(startTime, endTime);
+        // Add a small delay to prevent immediate closing
+        dragTimeoutRef.current = setTimeout(() => {
+          onTimeSlotSelect(startTime, endTime);
+        }, 100);
       }
     }
     
     setIsDragging(false);
     setDragStart(null);
     setDragEnd(null);
+  };
+
+  const handleMouseLeave = (event: React.MouseEvent) => {
+    // Only end drag if we're leaving the calendar entirely
+    if (!calendarRef.current?.contains(event.relatedTarget as Node)) {
+      if (dragTimeoutRef.current) {
+        clearTimeout(dragTimeoutRef.current);
+      }
+      setIsDragging(false);
+      setDragStart(null);
+      setDragEnd(null);
+    }
   };
 
   const isSlotSelected = (dayIndex: number, hour: number) => {
@@ -121,6 +138,15 @@ const TimeGridCalendar = ({
     return events;
   };
 
+  // Cleanup timeout on unmount
+  React.useEffect(() => {
+    return () => {
+      if (dragTimeoutRef.current) {
+        clearTimeout(dragTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return (
     <Card className="h-full">
       <CardContent className="p-0">
@@ -146,7 +172,7 @@ const TimeGridCalendar = ({
           <div 
             ref={calendarRef} 
             className="flex-1 overflow-auto"
-            onMouseLeave={handleMouseUp}
+            onMouseLeave={handleMouseLeave}
           >
             {timeSlots.map((timeSlot) => (
               <div key={timeSlot.hour} className="grid grid-cols-8 border-b hover:bg-gray-50">
@@ -163,10 +189,10 @@ const TimeGridCalendar = ({
                   return (
                     <div
                       key={`${dayIndex}-${timeSlot.hour}`}
-                      className={`p-1 border-r last:border-r-0 min-h-[40px] cursor-pointer transition-colors ${
+                      className={`p-1 border-r last:border-r-0 min-h-[40px] cursor-pointer transition-colors select-none ${
                         isSelected ? 'bg-blue-200' : 'hover:bg-gray-100'
                       }`}
-                      onMouseDown={() => handleMouseDown(dayIndex, timeSlot.hour)}
+                      onMouseDown={(e) => handleMouseDown(dayIndex, timeSlot.hour, e)}
                       onMouseEnter={() => handleMouseEnter(dayIndex, timeSlot.hour)}
                       onMouseUp={handleMouseUp}
                     >

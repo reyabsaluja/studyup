@@ -68,6 +68,7 @@ const Planner = () => {
   };
 
   const handleTimeSlotSelect = (startTime: Date, endTime: Date) => {
+    console.log('Time slot selected:', { startTime, endTime });
     setSelectedTimeSlot({ startTime, endTime });
     setShowTimeSlotPopover(true);
   };
@@ -122,7 +123,7 @@ const Planner = () => {
                 onCreateStudySession={handleAddStudySession}
                 onCreateAssignment={handleAddAssignment}
               >
-                <div className="h-full">
+                <div className="h-full" data-calendar-grid>
                   <TimeGridCalendar
                     selectedDate={selectedDate}
                     onDateSelect={handleDateClick}

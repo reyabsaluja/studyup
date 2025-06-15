@@ -24,12 +24,16 @@ const TimeSlotSelectionPopover = ({
   onCreateAssignment,
   children
 }: TimeSlotSelectionPopoverProps) => {
-  const handleCreateStudySession = () => {
+  const handleCreateStudySession = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     onCreateStudySession();
     onOpenChange(false);
   };
 
-  const handleCreateAssignment = () => {
+  const handleCreateAssignment = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     onCreateAssignment();
     onOpenChange(false);
   };
@@ -38,12 +42,30 @@ const TimeSlotSelectionPopover = ({
     return `${format(start, 'MMM d, h:mm a')} - ${format(end, 'h:mm a')}`;
   };
 
+  const handleContentClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
     <Popover open={open} onOpenChange={onOpenChange}>
       <PopoverTrigger asChild>
         {children}
       </PopoverTrigger>
-      <PopoverContent className="w-80" align="center">
+      <PopoverContent 
+        className="w-80 z-50" 
+        align="center"
+        onClick={handleContentClick}
+        onPointerDownOutside={(e) => {
+          // Only close if clicking outside the calendar area
+          const target = e.target as Element;
+          if (!target.closest('[data-calendar-grid]')) {
+            onOpenChange(false);
+          } else {
+            e.preventDefault();
+          }
+        }}
+      >
         <div className="space-y-4">
           <div className="space-y-2">
             <h4 className="font-medium text-sm">Create event for selected time</h4>
