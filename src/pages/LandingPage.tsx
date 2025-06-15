@@ -23,7 +23,7 @@ const LandingPage = () => {
             Login
           </Button>
           <Button onClick={() => navigate('/auth')} variant="default">
-            Try It Out <ArrowRight className="ml-2 h-4 w-4 hidden md:inline" />
+            Get Started for Free <ArrowRight className="ml-2 h-4 w-4 hidden md:inline" />
           </Button>
         </div>
       </header>
@@ -36,15 +36,14 @@ const LandingPage = () => {
           <p className="mt-4 text-sm md:text-base text-muted-foreground">
             StudyUp is the all-in-one academic planner and AI tutor. Organize your schedule, manage assignments, and get instant help.
           </p>
-          <div className="mt-8">
-            <Button size="lg" onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-              Get Started for Free
-              <ArrowRight className="ml-2 h-5 w-5" />
+          <div className="mt-8 mb-8">
+            <Button size="lg" onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2">
+              Try it Out
             </Button>
           </div>
         </div>
 
-        <div className="relative mt-16 md:mt-24 w-full">
+        <div className="relative mt-8 md:mt-16 w-full">
           <div className="absolute -inset-2 rounded-xl bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 opacity-20 blur-2xl"></div>
           <img 
             src="/lovable-uploads/8321a47f-6fa8-4086-870a-1b76b48edcb3.png" 
