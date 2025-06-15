@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,6 +41,28 @@ const Planner = () => {
     toggleAssignmentCompletion,
     isTogglingCompletion,
   } = useAllAssignments();
+
+  useEffect(() => {
+    if (!selectedEvent) return;
+
+    let updatedEvent;
+    if (selectedEventType === 'assignment') {
+      updatedEvent = assignments.find(a => a.id === selectedEvent.id);
+    } else if (selectedEventType === 'study') {
+      updatedEvent = studySessions.find(s => s.id === selectedEvent.id);
+    }
+
+    if (updatedEvent) {
+      // Stringify to prevent re-renders from objects with same values but different references.
+      if (JSON.stringify(updatedEvent) !== JSON.stringify(selectedEvent)) {
+        setSelectedEvent(updatedEvent);
+      }
+    } else {
+      // Event was likely deleted, close the sidebar.
+      setSelectedEvent(null);
+      setSelectedEventType(null);
+    }
+  }, [assignments, studySessions, selectedEvent, selectedEventType]);
 
   const getSessionsForDate = (date: Date) => {
     return studySessions.filter(session => {
