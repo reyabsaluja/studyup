@@ -1,56 +1,66 @@
 
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
+import { useAllAssignments } from '@/hooks/useAssignments';
+import { useCourses } from '@/hooks/useCourses';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface AddAssignmentDialogProps {
-  onAddAssignment: (assignment: {
-    title: string;
-    description?: string;
-    due_date?: string;
-  }) => void;
-  isCreating: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  initialDueDate?: Date;
 }
 
-const AddAssignmentDialog = ({ onAddAssignment, isCreating }: AddAssignmentDialogProps) => {
-  const [open, setOpen] = useState(false);
+const AddAssignmentDialog = ({ open, onOpenChange, initialDueDate }: AddAssignmentDialogProps) => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    due_date: ''
+    due_date: '',
+    course_id: ''
   });
+  
+  const { createAssignment, isCreating } = useAllAssignments();
+  const { courses } = useCourses();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Set initial due date when dialog opens
+  useEffect(() => {
+    if (open && initialDueDate) {
+      const isoString = initialDueDate.toISOString().slice(0, 16);
+      setFormData(prev => ({ ...prev, due_date: isoString }));
+    }
+  }, [open, initialDueDate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
 
-    onAddAssignment({
-      title: formData.title.trim(),
-      description: formData.description.trim() || undefined,
-      due_date: formData.due_date || undefined
-    });
+    try {
+      await createAssignment({
+        title: formData.title.trim(),
+        description: formData.description.trim() || undefined,
+        due_date: formData.due_date || undefined,
+        course_id: formData.course_id || undefined
+      });
 
-    // Reset form and close dialog
-    setFormData({
-      title: '',
-      description: '',
-      due_date: ''
-    });
-    setOpen(false);
+      // Reset form and close dialog
+      setFormData({
+        title: '',
+        description: '',
+        due_date: '',
+        course_id: ''
+      });
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error creating assignment:', error);
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          Add Assignment
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Assignment</DialogTitle>
@@ -65,6 +75,25 @@ const AddAssignmentDialog = ({ onAddAssignment, isCreating }: AddAssignmentDialo
               placeholder="e.g., Physics Lab Report"
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="course">Course (Optional)</Label>
+            <Select
+              value={formData.course_id}
+              onValueChange={(value) => setFormData({ ...formData, course_id: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a course" />
+              </SelectTrigger>
+              <SelectContent>
+                {courses.map((course) => (
+                  <SelectItem key={course.id} value={course.id}>
+                    {course.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
@@ -89,7 +118,7 @@ const AddAssignmentDialog = ({ onAddAssignment, isCreating }: AddAssignmentDialo
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isCreating || !formData.title.trim()}>
