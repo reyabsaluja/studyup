@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Plus, Clock, BookOpen, Target, Calendar as CalendarIcon, Trash2, Edit, Check } from 'lucide-react';
-import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addDays, isSameDay } from 'date-fns';
+import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addDays, isSameDay, isPast } from 'date-fns';
 import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import AddStudySessionDialog from '@/components/AddStudySessionDialog';
@@ -233,18 +234,36 @@ const Planner = () => {
                           <div className="space-y-2">
                             {selectedDateAssignments.map((assignment) => {
                               const course = courses.find(c => c.id === assignment.course_id);
+                              
+                              let badgeText: string;
+                              let badgeVariant: 'default' | 'destructive' | 'secondary';
+
+                              if (assignment.completed) {
+                                badgeText = "Completed";
+                                badgeVariant = "default";
+                              } else if (isToday(selectedDate)) {
+                                badgeText = "Due Today";
+                                badgeVariant = "destructive";
+                              } else if (isPast(selectedDate) && !isToday(selectedDate)) {
+                                badgeText = "Overdue";
+                                badgeVariant = "destructive";
+                              } else {
+                                badgeText = "Due";
+                                badgeVariant = "secondary";
+                              }
+
                               return (
                                 <div key={assignment.id} className="p-3 border rounded-lg bg-green-50">
                                   <div className="flex justify-between items-start">
-                                    <div>
+                                    <div className="flex-1 pr-4">
                                       <p className="font-medium">{assignment.title}</p>
                                       <p className="text-sm text-gray-600">{course?.name || 'Unknown Course'}</p>
                                       {assignment.description && (
-                                        <p className="text-sm text-gray-500 mt-1">{assignment.description}</p>
+                                        <p className="text-sm text-gray-500 mt-1 break-words">{assignment.description}</p>
                                       )}
                                     </div>
-                                    <Badge variant={assignment.completed ? "default" : "destructive"}>
-                                      {assignment.completed ? "Completed" : "Due Today"}
+                                    <Badge variant={badgeVariant} className="flex-shrink-0">
+                                      {badgeText}
                                     </Badge>
                                   </div>
                                 </div>
