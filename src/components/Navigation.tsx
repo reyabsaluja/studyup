@@ -2,10 +2,12 @@
 import { Button } from "@/components/ui/button";
 import { BookOpen, Calendar, Brain, Upload, MessageSquare, Settings } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useProfile } from "@/hooks/useProfile";
 
 const Navigation = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { profile, isLoading } = useProfile();
 
   const navItems = [
     { path: "/dashboard", label: "Dashboard", icon: BookOpen },
@@ -23,13 +25,18 @@ const Navigation = () => {
     return location.pathname.startsWith(path);
   };
 
+  const libraryName =
+    !isLoading && profile?.first_name
+      ? `${profile.first_name}'s Library`
+      : "StudyUp";
+
   return (
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen p-6">
       <div className="flex items-center space-x-3 mb-8">
         <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
           <Brain className="h-5 w-5 text-white" />
         </div>
-        <h1 className="text-xl font-semibold text-gray-900">StudyUp</h1>
+        <h1 className="text-xl font-semibold text-gray-900">{libraryName}</h1>
       </div>
       <nav className="space-y-2">
         {navItems.map((item) => {
