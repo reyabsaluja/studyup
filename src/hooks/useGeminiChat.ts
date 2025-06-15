@@ -1,5 +1,6 @@
 
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -15,11 +16,53 @@ interface UseGeminiChatReturn {
   isLoading: boolean;
   sendMessage: (message: string, context?: string) => Promise<void>;
   clearMessages: () => void;
+  saveChat: (data: { title: string; assignment_id?: string }) => void;
+  isSaving: boolean;
 }
 
 export const useGeminiChat = (): UseGeminiChatReturn => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const queryClient = useQueryClient();
+
+  const { mutate: performSave, isPending: isSaving } = useMutation({
+    mutationFn: async ({ title, assignment_id }: { title: string; assignment_id?: string }) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) {
+        toast.error('You must be logged in to save a chat.');
+        throw new Error('User not authenticated');
+      }
+      const user_id = session.user.id;
+
+      const { error } = await supabase.from('ai_chats').insert({
+        user_id,
+        title,
+        messages: messages as any,
+        assignment_id: assignment_id || null,
+      });
+
+      if (error) {
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      toast.success('Chat saved successfully!');
+      queryClient.invalidateQueries({ queryKey: ['ai_chats'] });
+      queryClient.invalidateQueries({ queryKey: ['assignments'] });
+    },
+    onError: (error) => {
+      console.error('Error saving chat:', error);
+      toast.error(`Failed to save chat: ${error.message}`);
+    },
+  });
+
+  const saveChat = ({ title, assignment_id }: { title: string; assignment_id?: string }) => {
+    if (messages.length === 0) {
+      toast.warning("Cannot save an empty chat.");
+      return;
+    }
+    performSave({ title, assignment_id });
+  };
 
   const sendMessage = async (message: string, context?: string) => {
     if (!message.trim()) return;
@@ -76,5 +119,7 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
     isLoading,
     sendMessage,
     clearMessages,
+    saveChat,
+    isSaving,
   };
 };

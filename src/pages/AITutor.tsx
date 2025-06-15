@@ -4,12 +4,14 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Brain, Send, Trash2, FileText } from 'lucide-react';
+import { Brain, Send, Trash2, FileText, Save } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import { useGeminiChat } from '@/hooks/useGeminiChat';
 import ReactMarkdown from 'react-markdown';
 import { useCourseMaterials } from '@/hooks/useCourseMaterials';
+import { useAllAssignments } from '@/hooks/useAssignments';
+import SaveChatDialog from '@/components/SaveChatDialog';
 
 // Custom CSS animation for highlighting new assistant responses
 const highlightStyle = `
@@ -24,8 +26,10 @@ const highlightStyle = `
 
 const AITutor = () => {
   const [inputMessage, setInputMessage] = useState('');
-  const { messages, isLoading, sendMessage, clearMessages } = useGeminiChat();
+  const { messages, isLoading, sendMessage, clearMessages, saveChat, isSaving } = useGeminiChat();
   const location = useLocation();
+  const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const { assignments } = useAllAssignments();
 
   // For highlighting the latest assistant message
   const [highlightId, setHighlightId] = useState<string | null>(null);
@@ -64,6 +68,10 @@ const AITutor = () => {
       // We don't automatically send this as a message, just show it as context
     }
   }, [courseContext, messages.length]);
+
+  const handleSaveChat = (data: { title: string; assignment_id?: string }) => {
+    saveChat(data);
+  };
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -121,6 +129,10 @@ const AITutor = () => {
               </div>
             </div>
             <div className="flex items-center space-x-4">
+              <Button variant="outline" onClick={() => setShowSaveDialog(true)} disabled={messages.length === 0 || isSaving}>
+                <Save className="h-4 w-4 mr-2" />
+                Save Chat
+              </Button>
               <Button variant="outline" onClick={clearMessages} disabled={messages.length === 0}>
                 <Trash2 className="h-4 w-4 mr-2" />
                 Clear Chat
@@ -289,6 +301,14 @@ const AITutor = () => {
           </div>
         </div>
       </main>
+
+      <SaveChatDialog
+        open={showSaveDialog}
+        onOpenChange={setShowSaveDialog}
+        assignments={assignments}
+        onSave={handleSaveChat}
+        isSaving={isSaving}
+      />
     </div>
   );
 };
