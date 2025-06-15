@@ -1,10 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Plus, Upload, Loader2, Paperclip } from 'lucide-react';
+import { Upload, Loader2, Paperclip } from 'lucide-react';
 
 interface AddAssignmentMaterialDialogProps {
   assignmentId: string;
@@ -17,6 +17,7 @@ const AddAssignmentMaterialDialog: React.FC<AddAssignmentMaterialDialogProps> = 
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState('');
   const [file, setFile] = useState<File | null>(null);
+  const prevIsUploading = useRef(isUploading);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,15 +32,18 @@ const AddAssignmentMaterialDialog: React.FC<AddAssignmentMaterialDialogProps> = 
   };
   
   useEffect(() => {
-    if (!isUploading && open) {
+    // This effect should only run to close the dialog AFTER an upload is complete.
+    // An upload is complete when isUploading goes from `true` to `false`.
+    if (prevIsUploading.current && !isUploading) {
       const timer = setTimeout(() => {
-        setOpen(false);
-        setTitle('');
-        setFile(null);
+        setOpen(false); // This will trigger onOpenChange
       }, 500); // give a bit of time for toast to show
       return () => clearTimeout(timer);
     }
-  }, [isUploading, open]);
+    
+    // update the ref *after* the check
+    prevIsUploading.current = isUploading;
+  }, [isUploading]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -51,8 +55,17 @@ const AddAssignmentMaterialDialog: React.FC<AddAssignmentMaterialDialogProps> = 
     }
   };
 
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      // Reset form state when dialog is closed for any reason
+      setTitle('');
+      setFile(null);
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {children || (
             <Button size="sm">
