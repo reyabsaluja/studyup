@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, MessageSquare, Calendar, Edit, Brain, X } from 'lucide-react';
+import { Loader2, ArrowLeft, MessageSquare, Calendar, Edit, Brain, X, Paperclip, Download, Eye, Trash2 } from 'lucide-react';
 import { 
   AlertDialog, 
   AlertDialogAction, 
@@ -23,8 +22,11 @@ import type { Database } from '@/integrations/supabase/types';
 import EditAssignmentDialog from '@/components/EditAssignmentDialog';
 import { useAssignments } from '@/hooks/useAssignments';
 import { useQueryClient } from '@tanstack/react-query';
+import { useAssignmentMaterials } from '@/hooks/useAssignmentMaterials';
+import AddAssignmentMaterialDialog from '@/components/AddAssignmentMaterialDialog';
 
 type AiChat = Database['public']['Tables']['ai_chats']['Row'];
+type AssignmentMaterial = Database['public']['Tables']['assignment_materials']['Row'];
 
 const AssignmentPage = () => {
   const { courseId, assignmentId } = useParams<{ courseId: string; assignmentId: string }>();
@@ -35,6 +37,7 @@ const AssignmentPage = () => {
 
   const { assignment, isLoading: assignmentLoading } = useAssignment(assignmentId);
   const { chats, isLoading: chatsLoading, unlinkChat, isUnlinking } = useAiChats(assignmentId);
+  const { materials, isLoading: materialsLoading, uploadMaterial, isUploading, deleteMaterial, isDeleting } = useAssignmentMaterials(assignmentId);
   const { updateAssignment, isUpdating } = useAssignments(courseId);
 
   const handleChatClick = (chat: AiChat) => {
@@ -60,7 +63,27 @@ const AssignmentPage = () => {
     });
   };
 
-  if (assignmentLoading || chatsLoading) {
+  const handleAddMaterial = (data: { title: string; type: string; file: File; assignment_id: string; }) => {
+    if (!assignmentId) return;
+    uploadMaterial(data);
+  };
+
+  const handleDeleteMaterial = (material: AssignmentMaterial) => {
+      deleteMaterial(material);
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return '📷';
+    if (type.startsWith('video/')) return '🎥';
+    if (type.startsWith('audio/')) return '🎵';
+    if (type.includes('pdf')) return '📄';
+    if (type.includes('document')) return '📝';
+    if (type.includes('presentation')) return '📊';
+    if (type.includes('spreadsheet')) return '📈';
+    return '📎';
+  };
+
+  if (assignmentLoading || chatsLoading || materialsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
         <Navigation />
@@ -135,6 +158,87 @@ const AssignmentPage = () => {
                 <div className="flex items-center text-sm text-gray-600">
                   <Calendar className="h-4 w-4 mr-2" />
                   <span>Due on {new Date(assignment.due_date).toLocaleDateString()}</span>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Paperclip className="h-5 w-5 mr-2" />
+                  Assignment Materials
+                </div>
+                {assignmentId && (
+                  <AddAssignmentMaterialDialog
+                    assignmentId={assignmentId}
+                    onAddMaterial={handleAddMaterial}
+                    isUploading={isUploading}
+                  />
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {materials && materials.length > 0 ? (
+                <ul className="space-y-3">
+                  {materials.map(material => (
+                    <li key={material.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => window.open(material.url || '', '_blank')}>
+                      <div className="flex items-center space-x-3 flex-grow">
+                        <span className="text-2xl">{getFileIcon(material.type)}</span>
+                        <div>
+                          <p className="font-semibold">{material.title}</p>
+                          <p className="text-sm text-gray-500">
+                            Uploaded on {new Date(material.created_at).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-1">
+                        <Button asChild variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); window.open(material.url || '', '_blank'); }}>
+                            <Eye className="h-4 w-4" />
+                        </Button>
+                         <Button 
+                          variant="ghost" 
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (!material.url) return;
+                            const link = document.createElement('a');
+                            link.href = material.url;
+                            link.download = material.title;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                          }}
+                        >
+                          <Download className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                             <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" disabled={isDeleting} onClick={(e) => e.stopPropagation()}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Material?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{material.title}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteMaterial(material)} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  No materials have been added to this assignment yet.
                 </div>
               )}
             </CardContent>

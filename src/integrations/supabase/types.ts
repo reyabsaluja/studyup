@@ -85,6 +85,47 @@ export type Database = {
           },
         ]
       }
+      assignment_materials: {
+        Row: {
+          assignment_id: string
+          content: string | null
+          created_at: string
+          file_path: string | null
+          id: string
+          title: string
+          type: string
+          url: string | null
+        }
+        Insert: {
+          assignment_id: string
+          content?: string | null
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          title: string
+          type: string
+          url?: string | null
+        }
+        Update: {
+          assignment_id?: string
+          content?: string | null
+          created_at?: string
+          file_path?: string | null
+          id?: string
+          title?: string
+          type?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assignment_materials_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       assignments: {
         Row: {
           completed: boolean | null
@@ -341,7 +382,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_course_owner_for_assignment: {
+        Args: { p_assignment_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
