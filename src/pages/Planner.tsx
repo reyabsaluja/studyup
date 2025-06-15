@@ -110,17 +110,17 @@ const Planner = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">
       <Navigation />
-      <main className="flex-1">
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
+      <main className="flex-1 flex flex-col">
+        <header className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">Planner</h1>
             <UserMenu />
           </div>
         </header>
 
-        <div className="p-6 h-[calc(100vh-80px)]">
-          <Card className="h-full">
-            <CardHeader>
+        <div className="p-6 flex-1 flex flex-col min-h-0">
+          <Card className="flex-1 flex flex-col min-h-0">
+            <CardHeader className="flex-shrink-0">
               <div className="flex items-center justify-between">
                 <CardTitle>{format(selectedDate, 'MMMM yyyy')}</CardTitle>
                 <div className="flex items-center gap-2">
@@ -143,7 +143,7 @@ const Planner = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="h-full p-0 relative">
+            <CardContent className="flex-1 p-0 relative min-h-0">
               <div className="h-full" data-calendar-grid>
                 <TimeGridCalendar
                   selectedDate={selectedDate}
