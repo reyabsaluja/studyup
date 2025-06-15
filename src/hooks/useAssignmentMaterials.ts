@@ -32,15 +32,15 @@ export const useAssignmentMaterials = (assignmentId?: string) => {
 
       const filePath = `public/assignment_materials/${user.id}/${newMaterial.assignment_id}/${Date.now()}-${newMaterial.file.name}`;
       
-      // We will use the 'course_materials' bucket for now.
+      // We will use the 'course-materials' bucket for now.
       const { error: uploadError } = await supabase.storage
-        .from('course_materials')
+        .from('course-materials')
         .upload(filePath, newMaterial.file);
 
       if (uploadError) throw uploadError;
 
       const { data: urlData } = supabase.storage
-        .from('course_materials')
+        .from('course-materials')
         .getPublicUrl(filePath);
 
       const { error: dbError } = await supabase
@@ -68,7 +68,7 @@ export const useAssignmentMaterials = (assignmentId?: string) => {
     mutationFn: async (material: AssignmentMaterial) => {
       if (material.file_path) {
         const { error: storageError } = await supabase.storage
-          .from('course_materials')
+          .from('course-materials')
           .remove([material.file_path]);
         if (storageError) {
           toast.warning(`Could not delete file from storage, but removing from list. Error: ${storageError.message}`);
