@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   Dialog,
@@ -45,7 +46,7 @@ const StudyPlanDialog: React.FC<StudyPlanDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl flex flex-col max-h-[85vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center">
             <Sparkles className="h-5 w-5 mr-2 text-purple-500" />
@@ -55,17 +56,17 @@ const StudyPlanDialog: React.FC<StudyPlanDialogProps> = ({
             Here is a suggested study plan. Review it and add it to your planner if it looks good.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-[60vh]">
+        <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 py-4 min-h-0">
           <div className="flex flex-col gap-4">
             <h3 className="font-semibold text-lg">Rationale</h3>
-            <ScrollArea className="flex-1 min-h-0 pr-4">
-              <p className="text-sm text-muted-foreground whitespace-pre-wrap">{plan.rationale}</p>
+            <ScrollArea className="flex-1">
+              <p className="text-sm text-muted-foreground whitespace-pre-wrap pr-4">{plan.rationale}</p>
             </ScrollArea>
           </div>
           <div className="flex flex-col gap-4">
              <h3 className="font-semibold text-lg">Proposed Sessions</h3>
-            <ScrollArea className="flex-1 min-h-0 pr-4">
-              <div className="space-y-4">
+            <ScrollArea className="flex-1">
+              <div className="space-y-4 pr-4">
                 {plan.sessions.map((session, index) => (
                   <div key={index} className="p-3 border rounded-lg">
                     <p className="font-semibold">{session.title}</p>
