@@ -16,6 +16,8 @@ interface EditAssignmentDialogProps {
   onUpdateAssignment?: (data: { id:string; updates: any }) => void; // Backward compatibility
   isUpdating?: boolean;
   children?: React.ReactNode;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const EditAssignmentDialog = ({ 
@@ -23,9 +25,17 @@ const EditAssignmentDialog = ({
   onUpdate,
   onUpdateAssignment, // Backward compatibility
   isUpdating = false,
-  children
+  children,
+  open: controlledOpen,
+  onOpenChange: setControlledOpen,
 }: EditAssignmentDialogProps) => {
-  const [open, setOpen] = useState(false);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
+
+  const isControlled = controlledOpen !== undefined && setControlledOpen !== undefined;
+
+  const open = isControlled ? controlledOpen : uncontrolledOpen;
+  const setOpen = isControlled ? setControlledOpen : setUncontrolledOpen;
+
   const [formData, setFormData] = useState({
     title: assignment.title,
     description: assignment.description || '',
