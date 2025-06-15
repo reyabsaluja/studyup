@@ -75,52 +75,6 @@ export const useAssignments = (courseId: string) => {
     },
   });
 
-  const updateAssignmentMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: AssignmentUpdate }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { data, error } = await supabase
-        .from('assignments')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Get course name for activity tracking
-      const { data: course } = await supabase
-        .from('courses')
-        .select('name')
-        .eq('id', courseId)
-        .single();
-
-      // Track activity
-      await supabase
-        .from('activities')
-        .insert({
-          user_id: user.id,
-          activity_type: 'assignment_updated',
-          activity_description: `Updated assignment: ${data.title}`,
-          related_course_id: courseId,
-          related_course_name: course?.name || 'Unknown Course',
-        });
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assignments', courseId] });
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
-      queryClient.invalidateQueries({ queryKey: ['activities'] });
-      toast.success('Assignment updated successfully!');
-    },
-    onError: (error) => {
-      console.error('Error updating assignment:', error);
-      toast.error('Failed to update assignment');
-    },
-  });
-
   const deleteAssignmentMutation = useMutation({
     mutationFn: async (assignment: Assignment) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -216,8 +170,6 @@ export const useAssignments = (courseId: string) => {
     error,
     createAssignment: createAssignmentMutation.mutate,
     isCreating: createAssignmentMutation.isPending,
-    updateAssignment: updateAssignmentMutation.mutate,
-    isUpdating: updateAssignmentMutation.isPending,
     deleteAssignment: deleteAssignmentMutation.mutate,
     isDeleting: deleteAssignmentMutation.isPending,
     toggleAssignmentCompletion: toggleAssignmentCompletionMutation.mutate,

@@ -275,11 +275,6 @@ const Planner = () => {
                                         <Clock className="h-4 w-4" />
                                       )}
                                     </Button>
-                                    <EditAssignmentDialog
-                                      assignment={assignment}
-                                      onUpdateAssignment={handleUpdateAssignment}
-                                      isUpdating={isUpdating}
-                                    />
                                     <Button
                                       variant="ghost"
                                       size="sm"
