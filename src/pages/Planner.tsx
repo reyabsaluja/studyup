@@ -7,6 +7,8 @@ import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addDays, isSameDay
 import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import AddStudySessionDialog from '@/components/AddStudySessionDialog';
+import AddAssignmentDialog from '@/components/AddAssignmentDialog';
+import AddEventPopover from '@/components/AddEventPopover';
 import CustomCalendar from '@/components/CustomCalendar';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
@@ -14,7 +16,8 @@ import { useAllAssignments } from '@/hooks/useAssignments';
 
 const Planner = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showAddStudySessionDialog, setShowAddStudySessionDialog] = useState(false);
+  const [showAddAssignmentDialog, setShowAddAssignmentDialog] = useState(false);
   const { studySessions, isLoading, updateStudySession, deleteStudySession } = useStudySessions();
   const { courses } = useCourses();
   const { assignments } = useAllAssignments();
@@ -95,6 +98,14 @@ const Planner = () => {
     setSelectedDate(date);
   };
 
+  const handleAddStudySession = () => {
+    setShowAddStudySessionDialog(true);
+  };
+
+  const handleAddAssignment = () => {
+    setShowAddAssignmentDialog(true);
+  };
+
   const selectedDateSessions = getSessionsForDate(selectedDate);
   const selectedDateAssignments = getAssignmentsForDate(selectedDate);
   const upcomingDeadlines = getUpcomingDeadlines();
@@ -119,10 +130,11 @@ const Planner = () => {
                 <CardHeader>
                   <div className="flex justify-between items-center">
                     <CardTitle>Study Calendar</CardTitle>
-                    <Button onClick={() => setShowAddDialog(true)}>
-                      <Plus className="h-4 w-4 mr-2" />
-                      Add Study Session
-                    </Button>
+                    <AddEventPopover
+                      selectedDate={selectedDate}
+                      onAddStudySession={handleAddStudySession}
+                      onAddAssignment={handleAddAssignment}
+                    />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -378,9 +390,15 @@ const Planner = () => {
       </main>
 
       <AddStudySessionDialog 
-        open={showAddDialog} 
-        onOpenChange={setShowAddDialog}
+        open={showAddStudySessionDialog} 
+        onOpenChange={setShowAddStudySessionDialog}
         selectedDate={selectedDate}
+      />
+      
+      <AddAssignmentDialog 
+        open={showAddAssignmentDialog} 
+        onOpenChange={setShowAddAssignmentDialog}
+        initialDueDate={selectedDate}
       />
     </div>
   );
