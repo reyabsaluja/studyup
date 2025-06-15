@@ -1,4 +1,3 @@
-
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -23,10 +22,13 @@ import { useCourseMaterials } from "@/hooks/useCourseMaterials";
 import AddAssignmentDialog from "@/components/AddAssignmentDialog";
 import AddMaterialDialog from "@/components/AddMaterialDialog";
 import EditAssignmentDialog from "@/components/EditAssignmentDialog";
+import { useState } from "react";
 
 const CoursePage = () => {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const [showAddAssignmentDialog, setShowAddAssignmentDialog] = useState(false);
+  
   const { courses, isLoading: coursesLoading } = useCourses();
   const { 
     assignments, 
@@ -225,7 +227,10 @@ const CoursePage = () => {
           <div className="mb-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="flex space-x-4">
-              <AddAssignmentDialog onAddAssignment={handleAddAssignment} isCreating={isCreating} />
+              <Button onClick={() => setShowAddAssignmentDialog(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Assignment
+              </Button>
               <AddMaterialDialog onAddMaterial={handleAddMaterial} isUploading={isUploading} />
               <Button variant="outline" onClick={handleAskAI}>
                 <Brain className="h-4 w-4 mr-2" />
@@ -240,7 +245,10 @@ const CoursePage = () => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span>Assignments</span>
-                  <AddAssignmentDialog onAddAssignment={handleAddAssignment} isCreating={isCreating} />
+                  <Button onClick={() => setShowAddAssignmentDialog(true)} size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Assignment
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -387,6 +395,11 @@ const CoursePage = () => {
           </div>
         </div>
       </main>
+
+      <AddAssignmentDialog 
+        open={showAddAssignmentDialog} 
+        onOpenChange={setShowAddAssignmentDialog}
+      />
     </div>
   );
 };

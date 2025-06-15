@@ -40,23 +40,25 @@ export const useAssignments = (courseId: string) => {
 
       if (error) throw error;
 
-      // Get course name for activity tracking
-      const { data: course } = await supabase
-        .from('courses')
-        .select('name')
-        .eq('id', newAssignment.course_id)
-        .single();
+      // Get course name for activity tracking if course_id is provided
+      if (newAssignment.course_id) {
+        const { data: course } = await supabase
+          .from('courses')
+          .select('name')
+          .eq('id', newAssignment.course_id)
+          .single();
 
-      // Track activity
-      await supabase
-        .from('activities')
-        .insert({
-          user_id: user.id,
-          activity_type: 'assignment_created',
-          activity_description: `Created assignment: ${newAssignment.title}`,
-          related_course_id: newAssignment.course_id,
-          related_course_name: course?.name || 'Unknown Course',
-        });
+        // Track activity
+        await supabase
+          .from('activities')
+          .insert({
+            user_id: user.id,
+            activity_type: 'assignment_created',
+            activity_description: `Created assignment: ${newAssignment.title}`,
+            related_course_id: newAssignment.course_id,
+            related_course_name: course?.name || 'Unknown Course',
+          });
+      }
 
       return data;
     },
@@ -224,6 +226,8 @@ export const useAssignments = (courseId: string) => {
 
 // Create a new hook to get all assignments for the planner
 export const useAllAssignments = () => {
+  const queryClient = useQueryClient();
+
   const { data: assignments = [], isLoading, error } = useQuery({
     queryKey: ['assignments', 'all'],
     queryFn: async (): Promise<Assignment[]> => {
@@ -243,9 +247,58 @@ export const useAllAssignments = () => {
     },
   });
 
+  const createAssignmentMutation = useMutation({
+    mutationFn: async (newAssignment: Omit<AssignmentInsert, 'id' | 'created_at' | 'updated_at'>) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('assignments')
+        .insert(newAssignment)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Get course name for activity tracking if course_id is provided
+      if (newAssignment.course_id) {
+        const { data: course } = await supabase
+          .from('courses')
+          .select('name')
+          .eq('id', newAssignment.course_id)
+          .single();
+
+        // Track activity
+        await supabase
+          .from('activities')
+          .insert({
+            user_id: user.id,
+            activity_type: 'assignment_created',
+            activity_description: `Created assignment: ${newAssignment.title}`,
+            related_course_id: newAssignment.course_id,
+            related_course_name: course?.name || 'Unknown Course',
+          });
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
+      toast.success('Assignment created successfully!');
+    },
+    onError: (error) => {
+      console.error('Error creating assignment:', error);
+      toast.error('Failed to create assignment');
+    },
+  });
+
   return {
     assignments,
     isLoading,
     error,
+    createAssignment: createAssignmentMutation.mutate,
+    isCreating: createAssignmentMutation.isPending,
   };
 };
