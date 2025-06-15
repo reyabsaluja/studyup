@@ -13,7 +13,7 @@ interface TimeGridCalendarProps {
   courses: any[];
   onAddStudySession: () => void;
   onAddAssignment: () => void;
-  onTimeSlotSelect?: (startTime: Date, endTime: Date) => void;
+  onTimeSlotSelect?: (startTime: Date, endTime: Date, element: HTMLElement) => void;
 }
 
 interface TimeSlot {
@@ -71,9 +71,13 @@ const TimeGridCalendar = ({
         const startTime = addHours(startOfDay(startDay), minHour);
         const endTime = addHours(startOfDay(endDay), maxHour + 1);
         
+        // Get the element that represents the middle of the selected time range
+        const middleHour = Math.floor((minHour + maxHour) / 2);
+        const targetElement = event.currentTarget as HTMLElement;
+        
         // Add a small delay to prevent immediate closing
         dragTimeoutRef.current = setTimeout(() => {
-          onTimeSlotSelect(startTime, endTime);
+          onTimeSlotSelect(startTime, endTime, targetElement);
         }, 100);
       }
     }

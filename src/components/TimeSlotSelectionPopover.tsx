@@ -1,7 +1,6 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { format } from 'date-fns';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Target, Calendar } from 'lucide-react';
 
@@ -12,7 +11,7 @@ interface TimeSlotSelectionPopoverProps {
   endTime: Date;
   onCreateStudySession: () => void;
   onCreateAssignment: () => void;
-  children: React.ReactNode;
+  anchorElement: HTMLElement;
 }
 
 const TimeSlotSelectionPopover = ({
@@ -22,8 +21,60 @@ const TimeSlotSelectionPopover = ({
   endTime,
   onCreateStudySession,
   onCreateAssignment,
-  children
+  anchorElement
 }: TimeSlotSelectionPopoverProps) => {
+  const popoverRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (open && popoverRef.current && anchorElement) {
+      const anchorRect = anchorElement.getBoundingClientRect();
+      const popoverRect = popoverRef.current.getBoundingClientRect();
+      
+      // Position the popover near the anchor element
+      const left = anchorRect.left + (anchorRect.width / 2) - (popoverRect.width / 2);
+      const top = anchorRect.top - popoverRect.height - 8;
+      
+      // Ensure popover stays within viewport
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      
+      let finalLeft = Math.max(8, Math.min(left, viewportWidth - popoverRect.width - 8));
+      let finalTop = Math.max(8, top);
+      
+      // If popover would be above viewport, show it below the anchor
+      if (finalTop < 8) {
+        finalTop = anchorRect.bottom + 8;
+      }
+      
+      popoverRef.current.style.left = `${finalLeft}px`;
+      popoverRef.current.style.top = `${finalTop}px`;
+    }
+  }, [open, anchorElement]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (popoverRef.current && !popoverRef.current.contains(event.target as Node)) {
+        onOpenChange(false);
+      }
+    };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        onOpenChange(false);
+      }
+    };
+
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [open, onOpenChange]);
+
   const handleCreateStudySession = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -42,61 +93,44 @@ const TimeSlotSelectionPopover = ({
     return `${format(start, 'MMM d, h:mm a')} - ${format(end, 'h:mm a')}`;
   };
 
-  const handleContentClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  };
+  if (!open) return null;
 
   return (
-    <Popover open={open} onOpenChange={onOpenChange}>
-      <PopoverTrigger asChild>
-        {children}
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-80 z-50" 
-        align="center"
-        onClick={handleContentClick}
-        onPointerDownOutside={(e) => {
-          // Only close if clicking outside the calendar area
-          const target = e.target as Element;
-          if (!target.closest('[data-calendar-grid]')) {
-            onOpenChange(false);
-          } else {
-            e.preventDefault();
-          }
-        }}
-      >
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <h4 className="font-medium text-sm">Create event for selected time</h4>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <Calendar className="h-4 w-4" />
-              <span>{formatTimeRange(startTime, endTime)}</span>
-            </div>
-          </div>
-          
-          <div className="space-y-2">
-            <Button
-              onClick={handleCreateStudySession}
-              className="w-full justify-start gap-2"
-              variant="outline"
-            >
-              <BookOpen className="h-4 w-4 text-blue-500" />
-              Create Study Session
-            </Button>
-            
-            <Button
-              onClick={handleCreateAssignment}
-              className="w-full justify-start gap-2"
-              variant="outline"
-            >
-              <Target className="h-4 w-4 text-green-500" />
-              Create Assignment
-            </Button>
+    <div
+      ref={popoverRef}
+      className="fixed z-50 w-80 bg-white rounded-lg border shadow-lg p-4"
+      style={{ position: 'fixed' }}
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <h4 className="font-medium text-sm">Create event for selected time</h4>
+          <div className="flex items-center gap-2 text-sm text-gray-600">
+            <Calendar className="h-4 w-4" />
+            <span>{formatTimeRange(startTime, endTime)}</span>
           </div>
         </div>
-      </PopoverContent>
-    </Popover>
+        
+        <div className="space-y-2">
+          <Button
+            onClick={handleCreateStudySession}
+            className="w-full justify-start gap-2"
+            variant="outline"
+          >
+            <BookOpen className="h-4 w-4 text-blue-500" />
+            Create Study Session
+          </Button>
+          
+          <Button
+            onClick={handleCreateAssignment}
+            className="w-full justify-start gap-2"
+            variant="outline"
+          >
+            <Target className="h-4 w-4 text-green-500" />
+            Create Assignment
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 };
 

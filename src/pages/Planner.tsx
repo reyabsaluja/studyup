@@ -25,6 +25,7 @@ const Planner = () => {
     startTime: Date;
     endTime: Date;
   } | null>(null);
+  const [popoverAnchorElement, setPopoverAnchorElement] = useState<HTMLElement | null>(null);
 
   const { studySessions, isLoading, updateStudySession, deleteStudySession } = useStudySessions();
   const { courses } = useCourses();
@@ -67,9 +68,10 @@ const Planner = () => {
     setSelectedDate(date);
   };
 
-  const handleTimeSlotSelect = (startTime: Date, endTime: Date) => {
+  const handleTimeSlotSelect = (startTime: Date, endTime: Date, element: HTMLElement) => {
     console.log('Time slot selected:', { startTime, endTime });
     setSelectedTimeSlot({ startTime, endTime });
+    setPopoverAnchorElement(element);
     setShowTimeSlotPopover(true);
   };
 
@@ -114,28 +116,31 @@ const Planner = () => {
             <CardHeader>
               <CardTitle>Weekly Calendar</CardTitle>
             </CardHeader>
-            <CardContent className="h-full p-0">
-              <TimeSlotSelectionPopover
-                open={showTimeSlotPopover}
-                onOpenChange={setShowTimeSlotPopover}
-                startTime={selectedTimeSlot?.startTime || new Date()}
-                endTime={selectedTimeSlot?.endTime || new Date()}
-                onCreateStudySession={handleAddStudySession}
-                onCreateAssignment={handleAddAssignment}
-              >
-                <div className="h-full" data-calendar-grid>
-                  <TimeGridCalendar
-                    selectedDate={selectedDate}
-                    onDateSelect={handleDateClick}
-                    assignments={assignments}
-                    studySessions={studySessions}
-                    courses={courses}
-                    onAddStudySession={handleAddStudySession}
-                    onAddAssignment={handleAddAssignment}
-                    onTimeSlotSelect={handleTimeSlotSelect}
-                  />
-                </div>
-              </TimeSlotSelectionPopover>
+            <CardContent className="h-full p-0 relative">
+              <div className="h-full" data-calendar-grid>
+                <TimeGridCalendar
+                  selectedDate={selectedDate}
+                  onDateSelect={handleDateClick}
+                  assignments={assignments}
+                  studySessions={studySessions}
+                  courses={courses}
+                  onAddStudySession={handleAddStudySession}
+                  onAddAssignment={handleAddAssignment}
+                  onTimeSlotSelect={handleTimeSlotSelect}
+                />
+              </div>
+              
+              {popoverAnchorElement && (
+                <TimeSlotSelectionPopover
+                  open={showTimeSlotPopover}
+                  onOpenChange={setShowTimeSlotPopover}
+                  startTime={selectedTimeSlot?.startTime || new Date()}
+                  endTime={selectedTimeSlot?.endTime || new Date()}
+                  onCreateStudySession={handleAddStudySession}
+                  onCreateAssignment={handleAddAssignment}
+                  anchorElement={popoverAnchorElement}
+                />
+              )}
             </CardContent>
           </Card>
         </div>
