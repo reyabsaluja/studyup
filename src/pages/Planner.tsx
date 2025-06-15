@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -8,8 +9,8 @@ import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import AddStudySessionDialog from '@/components/AddStudySessionDialog';
 import AddAssignmentDialog from '@/components/AddAssignmentDialog';
-import AddEventPopover from '@/components/AddEventPopover';
-import CustomCalendar from '@/components/CustomCalendar';
+import TimeGridCalendar from '@/components/TimeGridCalendar';
+import TimeSlotSelectionPopover from '@/components/TimeSlotSelectionPopover';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
 import { useAllAssignments } from '@/hooks/useAssignments';
@@ -19,6 +20,12 @@ const Planner = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [showAddStudySessionDialog, setShowAddStudySessionDialog] = useState(false);
   const [showAddAssignmentDialog, setShowAddAssignmentDialog] = useState(false);
+  const [showTimeSlotPopover, setShowTimeSlotPopover] = useState(false);
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState<{
+    startTime: Date;
+    endTime: Date;
+  } | null>(null);
+
   const { studySessions, isLoading, updateStudySession, deleteStudySession } = useStudySessions();
   const { courses } = useCourses();
   const {
@@ -52,26 +59,6 @@ const Planner = () => {
     return format(date, 'MMM d');
   };
 
-  const getDatesWithEvents = () => {
-    const datesWithEvents = new Set<string>();
-    
-    // Add dates with study sessions
-    studySessions.forEach(session => {
-      const sessionDate = new Date(session.scheduled_date);
-      datesWithEvents.add(sessionDate.toDateString());
-    });
-    
-    // Add dates with assignments
-    assignments.forEach(assignment => {
-      if (assignment.due_date) {
-        const dueDate = new Date(assignment.due_date);
-        datesWithEvents.add(dueDate.toDateString());
-      }
-    });
-    
-    return datesWithEvents;
-  };
-
   const handleCompleteSession = (sessionId: string, completed: boolean) => {
     updateStudySession({ id: sessionId, completed });
   };
@@ -80,12 +67,19 @@ const Planner = () => {
     setSelectedDate(date);
   };
 
+  const handleTimeSlotSelect = (startTime: Date, endTime: Date) => {
+    setSelectedTimeSlot({ startTime, endTime });
+    setShowTimeSlotPopover(true);
+  };
+
   const handleAddStudySession = () => {
     setShowAddStudySessionDialog(true);
+    setShowTimeSlotPopover(false);
   };
 
   const handleAddAssignment = () => {
     setShowAddAssignmentDialog(true);
+    setShowTimeSlotPopover(false);
   };
 
   const handleDeleteAssignment = (assignmentId: string) => {
@@ -114,164 +108,33 @@ const Planner = () => {
           </div>
         </header>
 
-        <div className="p-6">
-          <Card>
+        <div className="p-6 h-[calc(100vh-80px)]">
+          <Card className="h-full">
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Study Calendar</CardTitle>
-                <AddEventPopover
-                  selectedDate={selectedDate}
-                  onAddStudySession={handleAddStudySession}
-                  onAddAssignment={handleAddAssignment}
-                />
-              </div>
+              <CardTitle>Weekly Calendar</CardTitle>
             </CardHeader>
-            <CardContent>
-              <CustomCalendar
-                selectedDate={selectedDate}
-                onDateSelect={handleDateClick}
-                assignments={assignments}
-                studySessions={studySessions}
-                courses={courses}
-                onAddStudySession={handleAddStudySession}
-                onAddAssignment={handleAddAssignment}
-              />
-              
-              {/* Selected Date Events */}
-              <div className="mt-6 space-y-4">
-                <h3 className="font-semibold text-lg">
-                  Events for {formatDateLabel(selectedDate)}
-                </h3>
-                
-                {/* Study Sessions */}
-                {selectedDateSessions.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-600 mb-2 flex items-center">
-                      <BookOpen className="h-4 w-4 mr-1 text-blue-500" />
-                      Study Sessions
-                    </h4>
-                    <div className="space-y-2">
-                      {selectedDateSessions.map((session) => {
-                        const course = courses.find(c => c.id === session.course_id);
-                        return (
-                          <div key={session.id} className="p-3 border rounded-lg bg-blue-50">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1">
-                                <p className="font-medium">{session.title}</p>
-                                <p className="text-sm text-gray-600">{course?.name}</p>
-                                <div className="flex items-center mt-1 text-sm text-gray-500">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  {session.duration} minutes
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Badge variant={session.completed ? "default" : "secondary"}>
-                                  {session.completed ? "Completed" : "Scheduled"}
-                                </Badge>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleCompleteSession(session.id, !session.completed)}
-                                >
-                                  {session.completed ? (
-                                    <Check className="h-4 w-4" />
-                                  ) : (
-                                    <Clock className="h-4 w-4" />
-                                  )}
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => deleteStudySession(session.id)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {/* Assignments Due */}
-                {selectedDateAssignments.length > 0 && (
-                  <div>
-                    <h4 className="font-medium text-sm text-gray-600 mb-2 flex items-center">
-                      <Target className="h-4 w-4 mr-1 text-green-500" />
-                      Assignments Due
-                    </h4>
-                    <div className="space-y-2">
-                      {selectedDateAssignments.map((assignment) => {
-                        const course = courses.find(c => c.id === assignment.course_id);
-                        
-                        let badgeText: string;
-                        let badgeVariant: 'default' | 'destructive' | 'secondary';
-
-                        if (assignment.completed) {
-                          badgeText = "Completed";
-                          badgeVariant = "default";
-                        } else if (isToday(selectedDate)) {
-                          badgeText = "Due Today";
-                          badgeVariant = "destructive";
-                        } else if (isPast(selectedDate) && !isToday(selectedDate)) {
-                          badgeText = "Overdue";
-                          badgeVariant = "destructive";
-                        } else {
-                          badgeText = "Due";
-                          badgeVariant = "secondary";
-                        }
-
-                        return (
-                          <div key={assignment.id} className="p-3 border rounded-lg bg-green-50">
-                            <div className="flex justify-between items-start">
-                              <div className="flex-1 pr-4">
-                                <p className="font-medium">{assignment.title}</p>
-                                <p className="text-sm text-gray-600">{(assignment as any).courses?.name || course?.name || 'Unknown Course'}</p>
-                                {assignment.description && (
-                                  <p className="text-sm text-gray-500 mt-1 break-words">{assignment.description}</p>
-                                )}
-                              </div>
-                              <div className="flex items-center space-x-2 flex-shrink-0">
-                                <Badge variant={badgeVariant}>
-                                  {badgeText}
-                                </Badge>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleCompleteAssignment(assignment)}
-                                  disabled={isTogglingCompletion}
-                                  title={assignment.completed ? "Mark as not completed" : "Mark as completed"}
-                                >
-                                  <Check className={`h-4 w-4 ${assignment.completed ? 'text-green-600' : ''}`} />
-                                </Button>
-                                <EditAssignmentDialog
-                                  assignment={assignment}
-                                  onUpdateAssignment={handleUpdateAssignment}
-                                  isUpdating={isUpdating}
-                                />
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteAssignment(assignment.id)}
-                                  disabled={isDeleting}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {selectedDateSessions.length === 0 && selectedDateAssignments.length === 0 && (
-                  <p className="text-gray-500">No events scheduled for this day.</p>
-                )}
-              </div>
+            <CardContent className="h-full p-0">
+              <TimeSlotSelectionPopover
+                open={showTimeSlotPopover}
+                onOpenChange={setShowTimeSlotPopover}
+                startTime={selectedTimeSlot?.startTime || new Date()}
+                endTime={selectedTimeSlot?.endTime || new Date()}
+                onCreateStudySession={handleAddStudySession}
+                onCreateAssignment={handleAddAssignment}
+              >
+                <div className="h-full">
+                  <TimeGridCalendar
+                    selectedDate={selectedDate}
+                    onDateSelect={handleDateClick}
+                    assignments={assignments}
+                    studySessions={studySessions}
+                    courses={courses}
+                    onAddStudySession={handleAddStudySession}
+                    onAddAssignment={handleAddAssignment}
+                    onTimeSlotSelect={handleTimeSlotSelect}
+                  />
+                </div>
+              </TimeSlotSelectionPopover>
             </CardContent>
           </Card>
         </div>
@@ -280,13 +143,13 @@ const Planner = () => {
       <AddStudySessionDialog 
         open={showAddStudySessionDialog} 
         onOpenChange={setShowAddStudySessionDialog}
-        selectedDate={selectedDate}
+        selectedDate={selectedTimeSlot?.startTime || selectedDate}
       />
       
       <AddAssignmentDialog 
         open={showAddAssignmentDialog} 
         onOpenChange={setShowAddAssignmentDialog}
-        initialDueDate={selectedDate}
+        initialDueDate={selectedTimeSlot?.endTime || selectedDate}
       />
     </div>
   );
