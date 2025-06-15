@@ -1,7 +1,12 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker?url';
+
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker;
 
 type AssignmentMaterial = Database['public']['Tables']['assignment_materials']['Row'];
 
@@ -29,6 +34,37 @@ export const useAssignmentMaterials = (assignmentId?: string) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      let content: string | null = null;
+      const file = newMaterial.file;
+      if (file.type === 'text/plain') {
+        try {
+          content = await file.text();
+        } catch (e) {
+          console.error("Could not read file content:", e);
+          toast.warning("Could not read content from the text file.");
+        }
+      } else if (file.type === 'application/pdf') {
+        try {
+          const fileBuffer = await file.arrayBuffer();
+          const typedarray = new Uint8Array(fileBuffer);
+          const pdf = await pdfjsLib.getDocument(typedarray).promise;
+          let fullText = '';
+          for (let i = 1; i <= pdf.numPages; i++) {
+            const page = await pdf.getPage(i);
+            const textContent = await page.getTextContent();
+            const pageText = textContent.items.map((item: any) => 'str' in item ? item.str : '').join('');
+            fullText += pageText + '\n\n';
+          }
+          content = fullText.trim();
+          if (!content) {
+            toast.info("No text could be extracted from this PDF. It might be an image-based file.");
+          }
+        } catch (e: any) {
+          console.error("Could not read PDF file content:", e);
+          toast.error(`Failed to read content from the PDF file: ${e.message}`);
+        }
+      }
+
       const filePath = `assignment_materials/${user.id}/${newMaterial.assignment_id}/${Date.now()}-${newMaterial.file.name}`;
       
       const { error: uploadError } = await supabase.storage
@@ -49,6 +85,7 @@ export const useAssignmentMaterials = (assignmentId?: string) => {
           type: newMaterial.type,
           url: urlData.publicUrl,
           file_path: filePath,
+          content, // Save extracted content
         });
 
       if (dbError) throw dbError;

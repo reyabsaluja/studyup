@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -17,7 +16,7 @@ type AiChat = Database['public']['Tables']['ai_chats']['Row'];
 interface UseGeminiChatReturn {
   messages: ChatMessage[];
   isLoading: boolean;
-  sendMessage: (message: string, context?: string) => Promise<void>;
+  sendMessage: (message: string, context?: string, imageUrls?: string[]) => Promise<void>;
   clearMessages: () => void;
   saveChat: (data: { title: string; assignment_id?: string }) => void;
   isSaving: boolean;
@@ -83,7 +82,7 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
     }
   };
 
-  const sendMessage = async (message: string, context?: string) => {
+  const sendMessage = async (message: string, context?: string, imageUrls?: string[]) => {
     if (!message.trim()) return;
 
     const userMessage: ChatMessage = {
@@ -98,7 +97,7 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
 
     try {
       const { data, error } = await supabase.functions.invoke('chat-with-gemini', {
-        body: { message, context },
+        body: { message, context, imageUrls },
       });
 
       if (error) {

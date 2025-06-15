@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -112,28 +113,28 @@ const AITutor = () => {
         }
     }
 
-    // Add course materials to the context
-    if (courseMaterials && courseMaterials.length > 0) {
-      const materialInfo = courseMaterials.map(m => {
-        if (m.content) {
-          return `Material Title: "${m.title}"\nType: ${m.type}\nContent:\n${m.content}`;
-        }
-        return `Material Title: "${m.title}"\nType: ${m.type}\n(Content not available for this file type)`;
-      }).join('\n\n---\n\n');
-      
-      context += `\n\nHere are some general COURSE materials for reference. Use their content to answer questions when relevant.\n\n${materialInfo}`;
-    }
+    const allMaterials = [...(courseMaterials || []), ...(assignmentMaterials || [])];
+    const imageMaterials = allMaterials.filter(m => m.type.startsWith('image/') && m.url);
+    const textMaterials = allMaterials.filter(m => !m.type.startsWith('image/'));
+    const imageUrls = imageMaterials.map(m => m.url!);
 
-    // Add assignment materials to the context
-    if (assignmentMaterials && assignmentMaterials.length > 0) {
-        const materialInfo = assignmentMaterials.map(m => {
-            return `Assignment Material Title: "${m.title}"\nType: ${m.type}\n(Content not available, use title for reference)`;
+    // Add text materials to the context
+    if (textMaterials.length > 0) {
+        const materialInfo = textMaterials.map(m => {
+            if (m.content) {
+                return `Material Title: "${m.title}"\nType: ${m.type}\nContent:\n${m.content}`;
+            }
+            return `Material Title: "${m.title}"\nType: ${m.type}\n(Content not available for this file type)`;
         }).join('\n\n---\n\n');
-
-        context += `\n\nHere are some ASSIGNMENT-SPECIFIC materials. These are highly relevant to the student's current task.\n\n${materialInfo}`;
+        
+        context += `\n\nHere are some text-based materials for reference. Use their content to answer questions when relevant.\n\n${materialInfo}`;
     }
 
-    await sendMessage(inputMessage, context);
+    if (imageMaterials.length > 0) {
+        context += `\n\nAdditionally, ${imageMaterials.length} image(s) have been provided with the following titles: ${imageMaterials.map(m => `"${m.title}"`).join(', ')}. When asked about an image, use the corresponding image data provided alongside this prompt.`;
+    }
+
+    await sendMessage(inputMessage, context, imageUrls);
     setInputMessage('');
   };
 
