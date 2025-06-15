@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Clock, BookOpen, Target, Calendar as CalendarIcon, Trash2, Check } from 'lucide-react';
+import { Plus, Clock, BookOpen, Target, Calendar as CalendarIcon, Trash2, Edit, Check } from 'lucide-react';
 import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addDays, isSameDay, isPast } from 'date-fns';
 import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
@@ -13,6 +13,7 @@ import CustomCalendar from '@/components/CustomCalendar';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
 import { useAllAssignments } from '@/hooks/useAssignments';
+import EditAssignmentDialog from '@/components/EditAssignmentDialog';
 
 const Planner = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -24,6 +25,8 @@ const Planner = () => {
     assignments,
     deleteAssignment,
     isDeleting,
+    updateAssignment,
+    isUpdating,
     toggleAssignmentCompletion,
     isTogglingCompletion,
   } = useAllAssignments();
@@ -118,6 +121,10 @@ const Planner = () => {
 
   const handleCompleteAssignment = (assignment: any) => {
     toggleAssignmentCompletion(assignment);
+  };
+
+  const handleUpdateAssignment = (data: { id: string; updates: any }) => {
+    updateAssignment(data);
   };
 
   const selectedDateSessions = getSessionsForDate(selectedDate);
@@ -269,12 +276,13 @@ const Planner = () => {
                                       disabled={isTogglingCompletion}
                                       title={assignment.completed ? "Mark as not completed" : "Mark as completed"}
                                     >
-                                      {assignment.completed ? (
-                                        <Check className="h-4 w-4 text-green-600" />
-                                      ) : (
-                                        <Clock className="h-4 w-4" />
-                                      )}
+                                      <Check className={`h-4 w-4 ${assignment.completed ? 'text-green-600' : ''}`} />
                                     </Button>
+                                    <EditAssignmentDialog
+                                      assignment={assignment}
+                                      onUpdateAssignment={handleUpdateAssignment}
+                                      isUpdating={isUpdating}
+                                    />
                                     <Button
                                       variant="ghost"
                                       size="sm"

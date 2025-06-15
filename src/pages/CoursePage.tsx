@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Calendar, FileText, Brain, ArrowLeft, Plus, Loader2, Download, Eye, Trash2, Check, X } from "lucide-react";
+import { BookOpen, Calendar, FileText, Brain, ArrowLeft, Plus, Loader2, Download, Eye, Trash2, Edit, Check, X } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   AlertDialog, 
@@ -21,6 +21,7 @@ import { useAssignments } from "@/hooks/useAssignments";
 import { useCourseMaterials } from "@/hooks/useCourseMaterials";
 import AddAssignmentDialog from "@/components/AddAssignmentDialog";
 import AddMaterialDialog from "@/components/AddMaterialDialog";
+import EditAssignmentDialog from "@/components/EditAssignmentDialog";
 import { useState } from "react";
 
 const CoursePage = () => {
@@ -34,6 +35,8 @@ const CoursePage = () => {
     isLoading: assignmentsLoading, 
     createAssignment, 
     isCreating,
+    updateAssignment,
+    isUpdating,
     deleteAssignment,
     isDeleting,
     toggleAssignmentCompletion,
@@ -59,6 +62,17 @@ const CoursePage = () => {
         course_id: courseId
       });
     }
+  };
+
+  const handleUpdateAssignment = (updates: {
+    id: string;
+    updates: {
+      title: string;
+      description?: string;
+      due_date?: string;
+    };
+  }) => {
+    updateAssignment(updates);
   };
 
   const handleDeleteAssignment = (assignment: any) => {
@@ -267,6 +281,11 @@ const CoursePage = () => {
                             </div>
                           </div>
                           <div className="flex items-center space-x-2 ml-4">
+                            <EditAssignmentDialog
+                              assignment={assignment}
+                              onUpdateAssignment={handleUpdateAssignment}
+                              isUpdating={isUpdating}
+                            />
                             <AlertDialog>
                               <AlertDialogTrigger asChild>
                                 <Button variant="ghost" size="sm">
