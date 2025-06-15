@@ -26,7 +26,7 @@ const Auth = () => {
     const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        navigate("/");
+        navigate("/dashboard");
       }
     };
     checkUser();
@@ -59,7 +59,7 @@ const Auth = () => {
       }
 
       toast.success("Successfully logged in!");
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       toast.error("An unexpected error occurred. Please try again.");
     } finally {

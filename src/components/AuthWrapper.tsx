@@ -37,10 +37,11 @@ const AuthWrapper = ({ children }: AuthWrapperProps) => {
 
   useEffect(() => {
     if (!loading) {
-      if (!user && location.pathname !== "/auth") {
+      const publicPaths = ["/auth", "/"];
+      if (!user && !publicPaths.includes(location.pathname)) {
         navigate("/auth");
       } else if (user && location.pathname === "/auth") {
-        navigate("/");
+        navigate("/dashboard");
       }
     }
   }, [user, loading, navigate, location.pathname]);

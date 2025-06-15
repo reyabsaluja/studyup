@@ -14,6 +14,7 @@ import Upload from "./pages/Upload";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AITutor from "./pages/AITutor";
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -26,7 +27,8 @@ const App = () => (
         <AuthWrapper>
           <Routes>
             <Route path="/auth" element={<Auth />} />
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/courses" element={<Courses />} />
             <Route path="/courses/:courseId" element={<CoursePage />} />
             <Route path="/notebook" element={<Notebook />} />
