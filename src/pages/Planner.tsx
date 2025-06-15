@@ -108,9 +108,9 @@ const Planner = () => {
   const selectedDateAssignments = getAssignmentsForDate(selectedDate);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex font-sans">
+    <div className="h-screen bg-gray-50 flex font-sans overflow-hidden">
       <Navigation />
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col h-full overflow-hidden">
         <header className="bg-white border-b border-gray-200 px-6 py-4 flex-shrink-0">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">Planner</h1>
@@ -118,8 +118,8 @@ const Planner = () => {
           </div>
         </header>
 
-        <div className="p-6 flex-1 flex flex-col min-h-0">
-          <Card className="flex-1 flex flex-col min-h-0">
+        <div className="p-6 flex-1 flex flex-col overflow-hidden">
+          <Card className="flex-1 flex flex-col overflow-hidden">
             <CardHeader className="flex-shrink-0">
               <div className="flex items-center justify-between">
                 <CardTitle>{format(selectedDate, 'MMMM yyyy')}</CardTitle>
@@ -143,8 +143,8 @@ const Planner = () => {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="flex-1 p-0 relative min-h-0">
-              <div className="h-full" data-calendar-grid>
+            <CardContent className="flex-1 p-0 relative overflow-hidden">
+              <div className="h-full overflow-hidden" data-calendar-grid>
                 <TimeGridCalendar
                   selectedDate={selectedDate}
                   onDateSelect={handleDateClick}
