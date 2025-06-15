@@ -26,7 +26,8 @@ const SaveChatDialog = ({ open, onOpenChange, assignments, onSave, isSaving }: S
     if (!title.trim()) {
       return;
     }
-    onSave({ title: title.trim(), assignment_id: selectedAssignmentId || undefined });
+    const assignmentIdToSend = (selectedAssignmentId === 'none' || !selectedAssignmentId) ? undefined : selectedAssignmentId;
+    onSave({ title: title.trim(), assignment_id: assignmentIdToSend });
     onOpenChange(false);
   };
   
@@ -67,7 +68,7 @@ const SaveChatDialog = ({ open, onOpenChange, assignments, onSave, isSaving }: S
                   <SelectValue placeholder="Select an assignment" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Don't link to any assignment</SelectItem>
+                  <SelectItem value="none">Don't link to any assignment</SelectItem>
                   {assignments.map(assignment => (
                     <SelectItem key={assignment.id} value={assignment.id}>
                       {assignment.title}
