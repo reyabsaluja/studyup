@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -190,8 +191,11 @@ const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
                             {course.name}
                         </Badge>
                     )}
-                    <CardTitle className="mt-2 text-xl font-bold">
+                    <CardTitle className="mt-2 text-xl font-bold flex items-center gap-2">
                       {event.title}
+                      <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <Edit className="h-4 w-4" />
+                      </Button>
                     </CardTitle>
                 </div>
                 <Button variant="ghost" size="icon" onClick={onClose} className="-mt-2 -mr-2">
@@ -206,17 +210,19 @@ const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
                 <div className="flex items-center text-sm text-gray-600">
                     <Clock className="h-4 w-4 mr-2" />
                     <span>{format(new Date(event.scheduled_date), 'PPp')}</span>
+                    {event.duration && <span className="ml-2">({event.duration} mins)</span>}
                 </div>
-                {event.notes && (
+                {event.description && (
                     <div>
-                        <h4 className="font-semibold text-sm">Notes</h4>
-                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{event.notes}</p>
+                        <h4 className="font-semibold text-sm">Description</h4>
+                        <p className="text-sm text-gray-700 whitespace-pre-wrap">{event.description}</p>
                     </div>
                 )}
             </CardContent>
             <CardFooter className="flex flex-col gap-2 pt-4 border-t">
                  <Button
                     onClick={() => onCompleteStudySession(event as StudySession)}
+                    disabled={isTogglingCompletion}
                     variant={event.completed ? 'secondary' : 'default'}
                     className="w-full"
                 >
