@@ -9,7 +9,7 @@ import UserMenu from '@/components/UserMenu';
 import AddStudySessionDialog from '@/components/AddStudySessionDialog';
 import AddAssignmentDialog from '@/components/AddAssignmentDialog';
 import AddEventPopover from '@/components/AddEventPopover';
-import TimeGridCalendar from '@/components/TimeGridCalendar';
+import CustomCalendar from '@/components/CustomCalendar';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
 import { useAllAssignments } from '@/hooks/useAssignments';
@@ -47,10 +47,29 @@ const Planner = () => {
   };
 
   const formatDateLabel = (date: Date) => {
-    const now = new Date();
-    if (isToday(date)) return `Today, ${format(date, 'h:mm a')}`;
-    if (isTomorrow(date)) return `Tomorrow, ${format(date, 'h:mm a')}`;
-    return format(date, 'MMM d, h:mm a');
+    if (isToday(date)) return 'Today';
+    if (isTomorrow(date)) return 'Tomorrow';
+    return format(date, 'MMM d');
+  };
+
+  const getDatesWithEvents = () => {
+    const datesWithEvents = new Set<string>();
+    
+    // Add dates with study sessions
+    studySessions.forEach(session => {
+      const sessionDate = new Date(session.scheduled_date);
+      datesWithEvents.add(sessionDate.toDateString());
+    });
+    
+    // Add dates with assignments
+    assignments.forEach(assignment => {
+      if (assignment.due_date) {
+        const dueDate = new Date(assignment.due_date);
+        datesWithEvents.add(dueDate.toDateString());
+      }
+    });
+    
+    return datesWithEvents;
   };
 
   const handleCompleteSession = (sessionId: string, completed: boolean) => {
@@ -108,7 +127,7 @@ const Planner = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <TimeGridCalendar
+              <CustomCalendar
                 selectedDate={selectedDate}
                 onDateSelect={handleDateClick}
                 assignments={assignments}
@@ -189,16 +208,15 @@ const Planner = () => {
                         
                         let badgeText: string;
                         let badgeVariant: 'default' | 'destructive' | 'secondary';
-                        const dueDate = new Date(assignment.due_date!);
 
                         if (assignment.completed) {
                           badgeText = "Completed";
                           badgeVariant = "default";
-                        } else if (isPast(dueDate) && !isSameDay(dueDate, new Date())) {
-                          badgeText = "Overdue";
-                          badgeVariant = "destructive";
-                        } else if (isToday(dueDate)) {
+                        } else if (isToday(selectedDate)) {
                           badgeText = "Due Today";
+                          badgeVariant = "destructive";
+                        } else if (isPast(selectedDate) && !isToday(selectedDate)) {
+                          badgeText = "Overdue";
                           badgeVariant = "destructive";
                         } else {
                           badgeText = "Due";
