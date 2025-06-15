@@ -24,6 +24,8 @@ import { useAssignments } from '@/hooks/useAssignments';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAssignmentMaterials } from '@/hooks/useAssignmentMaterials';
 import AddAssignmentMaterialDialog from '@/components/AddAssignmentMaterialDialog';
+import { useStudyPlanner } from '@/hooks/useStudyPlanner';
+import StudyPlanDialog from '@/components/StudyPlanDialog';
 
 type AiChat = Database['public']['Tables']['ai_chats']['Row'];
 type AssignmentMaterial = Database['public']['Tables']['assignment_materials']['Row'];
@@ -39,6 +41,7 @@ const AssignmentPage = () => {
   const { chats, isLoading: chatsLoading, unlinkChat, isUnlinking } = useAiChats(assignmentId);
   const { materials, isLoading: materialsLoading, uploadMaterial, isUploading, deleteMaterial, isDeleting } = useAssignmentMaterials(assignmentId);
   const { updateAssignment, isUpdating } = useAssignments(courseId);
+  const { plan, generatePlan, isGenerating, addPlanToPlanner, isAdding, clearPlan } = useStudyPlanner(courseId);
 
   const handleChatClick = (chat: AiChat) => {
     navigate('/ai-tutor', { state: { chatToLoad: chat } });
@@ -134,6 +137,10 @@ const AssignmentPage = () => {
               </div>
             </div>
             <div className="flex items-center space-x-2">
+              <Button variant="outline" onClick={() => assignmentId && generatePlan(assignmentId)} disabled={isGenerating || !assignment?.due_date} title={!assignment?.due_date ? "An assignment must have a due date to generate a study plan." : ""}>
+                <Brain className="h-4 w-4 mr-2" />
+                {isGenerating ? 'Generating Plan...' : 'Make a Study Plan'}
+              </Button>
               <EditAssignmentDialog
                 assignment={assignment}
                 onUpdate={handleUpdateAssignment}
@@ -308,6 +315,16 @@ const AssignmentPage = () => {
           </Card>
         </div>
       </main>
+      {assignment && (
+        <StudyPlanDialog
+          open={!!plan}
+          onOpenChange={(isOpen) => !isOpen && clearPlan()}
+          plan={plan}
+          onConfirm={() => addPlanToPlanner({ assignmentTitle: assignment.title })}
+          isAdding={isAdding}
+          assignmentTitle={assignment.title}
+        />
+      )}
     </div>
   );
 };

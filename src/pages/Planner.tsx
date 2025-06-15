@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,8 @@ import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
 import { useAllAssignments } from '@/hooks/useAssignments';
 import EditAssignmentDialog from '@/components/EditAssignmentDialog';
+import { useStudyPlanner } from '@/hooks/useStudyPlanner';
+import StudyPlanDialog from '@/components/StudyPlanDialog';
 
 const Planner = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -40,6 +43,7 @@ const Planner = () => {
     toggleAssignmentCompletion,
     isTogglingCompletion,
   } = useAllAssignments();
+  const { plan, generatePlan, isGenerating, addPlanToPlanner, isAdding, clearPlan } = useStudyPlanner(selectedEvent?.course_id);
 
   useEffect(() => {
     if (!selectedEvent) return;
@@ -236,6 +240,8 @@ const Planner = () => {
             onDeleteAssignment={handleDeleteAssignment}
             onCompleteStudySession={handleCompleteStudySession}
             onDeleteStudySession={handleDeleteStudySession}
+            onMakeStudyPlan={() => selectedEvent?.id && generatePlan(selectedEvent.id)}
+            isGeneratingStudyPlan={isGenerating}
             isUpdating={isUpdating}
             isDeleting={isDeleting}
             isTogglingCompletion={isTogglingCompletion}
@@ -256,6 +262,17 @@ const Planner = () => {
         // Always use slot START for due date, not END
         initialDueDate={selectedTimeSlot?.startTime || selectedDate}
       />
+
+      {selectedEvent && (
+        <StudyPlanDialog
+          open={!!plan}
+          onOpenChange={(isOpen) => !isOpen && clearPlan()}
+          plan={plan}
+          onConfirm={() => addPlanToPlanner({ assignmentTitle: selectedEvent.title })}
+          isAdding={isAdding}
+          assignmentTitle={selectedEvent.title || ''}
+        />
+      )}
     </div>
   );
 };

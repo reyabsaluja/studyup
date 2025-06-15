@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { X, Clock, BookOpen, Target, Trash2, Edit, Check, ExternalLink } from 'lucide-react';
+import { X, Clock, BookOpen, Target, Trash2, Edit, Check, ExternalLink, Brain } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import EditAssignmentDialog from '@/components/EditAssignmentDialog';
@@ -40,6 +40,8 @@ interface PlannerEventSidebarProps {
   onDeleteAssignment: (assignmentId: string) => void;
   onCompleteStudySession: (session: StudySession) => void;
   onDeleteStudySession: (sessionId: string) => void;
+  onMakeStudyPlan: () => void;
+  isGeneratingStudyPlan: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
   isTogglingCompletion: boolean;
@@ -59,6 +61,8 @@ const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
   onDeleteAssignment,
   onCompleteStudySession,
   onDeleteStudySession,
+  onMakeStudyPlan,
+  isGeneratingStudyPlan,
   isUpdating,
   isDeleting,
   isTogglingCompletion,
@@ -125,6 +129,15 @@ const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
                 )}
             </CardContent>
             <CardFooter className="flex flex-col gap-2 pt-4 border-t">
+                <Button
+                    onClick={onMakeStudyPlan}
+                    disabled={isGeneratingStudyPlan || !event.due_date}
+                    className="w-full"
+                    title={!event.due_date ? "An assignment must have a due date to generate a study plan." : ""}
+                >
+                    <Brain className="mr-2 h-4 w-4" />
+                    {isGeneratingStudyPlan ? 'Generating Plan...' : 'Make a Study Plan'}
+                </Button>
                 <Button asChild className="w-full">
                     <Link to={`/courses/${event.course_id}/assignments/${event.id}`}>
                         <ExternalLink className="mr-2 h-4 w-4" />
