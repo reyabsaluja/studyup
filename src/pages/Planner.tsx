@@ -10,7 +10,7 @@ import AddStudySessionDialog from '@/components/AddStudySessionDialog';
 import AddAssignmentDialog from '@/components/AddAssignmentDialog';
 import TimeGridCalendar from '@/components/TimeGridCalendar';
 import TimeSlotSelectionPopover from '@/components/TimeSlotSelectionPopover';
-import EventDetailsSidebar from '@/components/EventDetailsSidebar';
+import PlannerEventSidebar from '@/components/PlannerEventSidebar';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
 import { useAllAssignments } from '@/hooks/useAssignments';
@@ -196,7 +196,7 @@ const Planner = () => {
           </Card>
 
           {/* Event Details Sidebar */}
-          <EventDetailsSidebar
+          <PlannerEventSidebar
             event={selectedEvent}
             eventType={selectedEventType}
             courses={courses}
