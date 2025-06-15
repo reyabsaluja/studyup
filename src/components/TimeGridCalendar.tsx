@@ -91,7 +91,8 @@ const TimeGridCalendar = ({
 
   const handleMouseLeave = (event: React.MouseEvent) => {
     // Only end drag if we're leaving the calendar entirely
-    if (!calendarRef.current?.contains(event.relatedTarget as Node)) {
+    const relatedTarget = event.relatedTarget as Node | null;
+    if (!calendarRef.current || !relatedTarget || !calendarRef.current.contains(relatedTarget)) {
       if (dragTimeoutRef.current) {
         clearTimeout(dragTimeoutRef.current);
       }

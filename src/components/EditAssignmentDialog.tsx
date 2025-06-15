@@ -1,30 +1,29 @@
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Edit } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type Assignment = Database['public']['Tables']['assignments']['Row'];
 
 interface EditAssignmentDialogProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   assignment: Assignment;
-  onUpdateAssignment: (updates: {
-    id: string;
-    updates: {
-      title: string;
-      description?: string;
-      due_date?: string;
-    };
-  }) => void;
-  isUpdating: boolean;
+  onUpdate?: (data: { id: string; updates: any }) => void;
+  isUpdating?: boolean;
 }
 
-const EditAssignmentDialog = ({ assignment, onUpdateAssignment, isUpdating }: EditAssignmentDialogProps) => {
-  const [open, setOpen] = useState(false);
+const EditAssignmentDialog = ({ 
+  open, 
+  onOpenChange, 
+  assignment, 
+  onUpdate, 
+  isUpdating = false 
+}: EditAssignmentDialogProps) => {
   const [formData, setFormData] = useState({
     title: assignment.title,
     description: assignment.description || '',
@@ -43,9 +42,9 @@ const EditAssignmentDialog = ({ assignment, onUpdateAssignment, isUpdating }: Ed
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim()) return;
+    if (!formData.title.trim() || !onUpdate) return;
 
-    onUpdateAssignment({
+    onUpdate({
       id: assignment.id,
       updates: {
         title: formData.title.trim(),
@@ -54,16 +53,11 @@ const EditAssignmentDialog = ({ assignment, onUpdateAssignment, isUpdating }: Ed
       }
     });
 
-    setOpen(false);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <Edit className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Assignment</DialogTitle>
@@ -102,7 +96,7 @@ const EditAssignmentDialog = ({ assignment, onUpdateAssignment, isUpdating }: Ed
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isUpdating || !formData.title.trim()}>
