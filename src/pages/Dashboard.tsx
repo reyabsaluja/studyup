@@ -123,7 +123,11 @@ const Dashboard = () => {
                   <FileText className="h-4 w-4 mr-2" />
                   Create New Note
                 </Button>
-                <Button className="w-full justify-start" variant="outline">
+                <Button 
+                  className="w-full justify-start" 
+                  variant="outline"
+                  onClick={() => navigate("/planner")}
+                >
                   <Calendar className="h-4 w-4 mr-2" />
                   Plan Study Session
                 </Button>

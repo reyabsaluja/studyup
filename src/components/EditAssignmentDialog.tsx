@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,8 +9,8 @@ import type { Database } from '@/integrations/supabase/types';
 type Assignment = Database['public']['Tables']['assignments']['Row'];
 
 interface EditAssignmentDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   assignment: Assignment;
   onUpdate?: (data: { id: string; updates: any }) => void;
   onUpdateAssignment?: (data: { id: string; updates: any }) => void; // Backward compatibility
@@ -19,8 +18,8 @@ interface EditAssignmentDialogProps {
 }
 
 const EditAssignmentDialog = ({ 
-  open, 
-  onOpenChange, 
+  open = false,
+  onOpenChange = () => {},
   assignment, 
   onUpdate,
   onUpdateAssignment, // Backward compatibility
