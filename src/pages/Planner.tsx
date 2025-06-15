@@ -10,6 +10,7 @@ import AddStudySessionDialog from '@/components/AddStudySessionDialog';
 import AddAssignmentDialog from '@/components/AddAssignmentDialog';
 import TimeGridCalendar from '@/components/TimeGridCalendar';
 import TimeSlotSelectionPopover from '@/components/TimeSlotSelectionPopover';
+import EventDetailsSidebar from '@/components/EventDetailsSidebar';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
 import { useAllAssignments } from '@/hooks/useAssignments';
@@ -25,6 +26,8 @@ const Planner = () => {
     endTime: Date;
   } | null>(null);
   const [popoverAnchorElement, setPopoverAnchorElement] = useState<HTMLElement | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<any | null>(null);
+  const [selectedEventType, setSelectedEventType] = useState<'assignment' | 'study' | null>(null);
 
   const { studySessions, isLoading, updateStudySession, deleteStudySession } = useStudySessions();
   const { courses } = useCourses();
@@ -104,6 +107,16 @@ const Planner = () => {
     setSelectedDate(addWeeks(selectedDate, 1));
   };
 
+  const handleEventClick = (event: any, eventType: 'assignment' | 'study') => {
+    setSelectedEvent(event);
+    setSelectedEventType(eventType);
+  };
+
+  const handleCloseSidebar = () => {
+    setSelectedEvent(null);
+    setSelectedEventType(null);
+  };
+
   const selectedDateSessions = getSessionsForDate(selectedDate);
   const selectedDateAssignments = getAssignmentsForDate(selectedDate);
 
@@ -118,8 +131,8 @@ const Planner = () => {
           </div>
         </header>
 
-        <div className="p-6 flex-1 flex flex-col overflow-hidden">
-          <Card className="flex-1 flex flex-col overflow-hidden">
+        <div className="p-6 flex-1 flex overflow-hidden">
+          <Card className="flex-1 flex flex-col overflow-hidden mr-6">
             <CardHeader className="flex-shrink-0">
               <div className="flex items-center justify-between">
                 <CardTitle>{format(selectedDate, 'MMMM yyyy')}</CardTitle>
@@ -154,6 +167,7 @@ const Planner = () => {
                   onAddStudySession={handleAddStudySession}
                   onAddAssignment={handleAddAssignment}
                   onTimeSlotSelect={handleTimeSlotSelect}
+                  onEventClick={handleEventClick}
                 />
               </div>
               
@@ -170,6 +184,22 @@ const Planner = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Event Details Sidebar */}
+          <EventDetailsSidebar
+            event={selectedEvent}
+            eventType={selectedEventType}
+            courses={courses}
+            onClose={handleCloseSidebar}
+            onUpdateAssignment={handleUpdateAssignment}
+            onCompleteAssignment={handleCompleteAssignment}
+            onDeleteAssignment={handleDeleteAssignment}
+            onUpdateStudySession={updateStudySession}
+            onDeleteStudySession={deleteStudySession}
+            isUpdating={isUpdating}
+            isDeleting={isDeleting}
+            isTogglingCompletion={isTogglingCompletion}
+          />
         </div>
       </main>
 

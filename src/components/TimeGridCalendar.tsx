@@ -14,6 +14,7 @@ interface TimeGridCalendarProps {
   onAddStudySession: () => void;
   onAddAssignment: () => void;
   onTimeSlotSelect?: (startTime: Date, endTime: Date, element: HTMLElement) => void;
+  onEventClick?: (event: any, eventType: 'assignment' | 'study') => void;
 }
 
 interface TimeSlot {
@@ -27,7 +28,8 @@ const TimeGridCalendar = ({
   assignments, 
   studySessions, 
   courses,
-  onTimeSlotSelect 
+  onTimeSlotSelect,
+  onEventClick
 }: TimeGridCalendarProps) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<{ day: number; hour: number } | null>(null);
@@ -142,6 +144,13 @@ const TimeGridCalendar = ({
     return events;
   };
 
+  const handleEventClick = (event: any, eventType: 'assignment' | 'study', e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEventClick) {
+      onEventClick(event, eventType);
+    }
+  };
+
   // Cleanup timeout on unmount
   React.useEffect(() => {
     return () => {
@@ -205,11 +214,12 @@ const TimeGridCalendar = ({
                         return (
                           <div
                             key={eventIndex}
-                            className={`text-xs p-1 rounded mb-1 ${
+                            className={`text-xs p-1 rounded mb-1 cursor-pointer hover:opacity-80 ${
                               event.type === 'study' 
                                 ? 'bg-blue-100 text-blue-800 border-l-2 border-blue-400' 
                                 : 'bg-green-100 text-green-800 border-l-2 border-green-400'
                             }`}
+                            onClick={(e) => handleEventClick(event, event.type, e)}
                           >
                             <div className="flex items-center gap-1">
                               {event.type === 'study' ? (
