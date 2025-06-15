@@ -1,6 +1,4 @@
-
 import React, { useState } from 'react';
-import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,6 +7,7 @@ import { format, isToday, isTomorrow, startOfWeek, endOfWeek, addDays, isSameDay
 import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import AddStudySessionDialog from '@/components/AddStudySessionDialog';
+import CustomCalendar from '@/components/CustomCalendar';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
 import { useAllAssignments } from '@/hooks/useAssignments';
@@ -100,7 +99,6 @@ const Planner = () => {
   const selectedDateAssignments = getAssignmentsForDate(selectedDate);
   const upcomingDeadlines = getUpcomingDeadlines();
   const weeklyProgress = getWeeklyProgress();
-  const datesWithEvents = getDatesWithEvents();
 
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">
@@ -114,9 +112,9 @@ const Planner = () => {
         </header>
 
         <div className="p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Calendar Section */}
-            <div className="lg:col-span-2">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Custom Calendar Section */}
+            <div className="lg:col-span-3">
               <Card>
                 <CardHeader>
                   <div className="flex justify-between items-center">
@@ -128,155 +126,124 @@ const Planner = () => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-                    <div className="flex justify-center">
-                      <Calendar
-                        mode="single"
-                        selected={selectedDate}
-                        onSelect={(date) => date && handleDateClick(date)}
-                        className="rounded-md border w-full max-w-md"
-                        components={{
-                          Day: ({ date }) => {
-                            const hasStudySessions = getSessionsForDate(date).length > 0;
-                            const hasAssignments = getAssignmentsForDate(date).length > 0;
-                            const isSelected = selectedDate && isSameDay(date, selectedDate);
-
+                  <CustomCalendar
+                    selectedDate={selectedDate}
+                    onDateSelect={handleDateClick}
+                    assignments={assignments}
+                    studySessions={studySessions}
+                    courses={courses}
+                  />
+                  
+                  {/* Selected Date Events */}
+                  <div className="mt-6 space-y-4">
+                    <h3 className="font-semibold text-lg">
+                      Events for {formatDateLabel(selectedDate)}
+                    </h3>
+                    
+                    {/* Study Sessions */}
+                    {selectedDateSessions.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-600 mb-2 flex items-center">
+                          <BookOpen className="h-4 w-4 mr-1 text-blue-500" />
+                          Study Sessions
+                        </h4>
+                        <div className="space-y-2">
+                          {selectedDateSessions.map((session) => {
+                            const course = courses.find(c => c.id === session.course_id);
                             return (
-                              <div className="relative">
-                                <button
-                                  className={`relative w-9 h-9 p-0 font-normal aria-selected:opacity-100 ${
-                                    isSelected
-                                      ? 'bg-primary text-primary-foreground rounded-lg'
-                                      : ''
-                                  }`}
-                                  onClick={() => handleDateClick(date)}
-                                >
-                                  {date.getDate()}
-                                  <div className="absolute bottom-0.5 left-1/2 transform -translate-x-1/2 flex gap-0.5">
-                                    {hasStudySessions && (
-                                      <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                                    )}
-                                    {hasAssignments && (
-                                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full"></div>
-                                    )}
+                              <div key={session.id} className="p-3 border rounded-lg bg-blue-50">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1">
+                                    <p className="font-medium">{session.title}</p>
+                                    <p className="text-sm text-gray-600">{course?.name}</p>
+                                    <div className="flex items-center mt-1 text-sm text-gray-500">
+                                      <Clock className="h-3 w-3 mr-1" />
+                                      {session.duration} minutes
+                                    </div>
                                   </div>
-                                </button>
+                                  <div className="flex items-center space-x-2">
+                                    <Badge variant={session.completed ? "default" : "secondary"}>
+                                      {session.completed ? "Completed" : "Scheduled"}
+                                    </Badge>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleCompleteSession(session.id, !session.completed)}
+                                    >
+                                      {session.completed ? (
+                                        <Check className="h-4 w-4" />
+                                      ) : (
+                                        <Clock className="h-4 w-4" />
+                                      )}
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => deleteStudySession(session.id)}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
                               </div>
                             );
-                          }
-                        }}
-                      />
-                    </div>
-                    <div className="space-y-4">
-                      <h3 className="font-semibold text-lg">
-                        Events for {formatDateLabel(selectedDate)}
-                      </h3>
-                      
-                      {/* Study Sessions */}
-                      {selectedDateSessions.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-sm text-gray-600 mb-2 flex items-center">
-                            <BookOpen className="h-4 w-4 mr-1 text-blue-500" />
-                            Study Sessions
-                          </h4>
-                          <div className="space-y-2">
-                            {selectedDateSessions.map((session) => {
-                              const course = courses.find(c => c.id === session.course_id);
-                              return (
-                                <div key={session.id} className="p-3 border rounded-lg bg-blue-50">
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex-1">
-                                      <p className="font-medium">{session.title}</p>
-                                      <p className="text-sm text-gray-600">{course?.name}</p>
-                                      <div className="flex items-center mt-1 text-sm text-gray-500">
-                                        <Clock className="h-3 w-3 mr-1" />
-                                        {session.duration} minutes
-                                      </div>
-                                    </div>
-                                    <div className="flex items-center space-x-2">
-                                      <Badge variant={session.completed ? "default" : "secondary"}>
-                                        {session.completed ? "Completed" : "Scheduled"}
-                                      </Badge>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => handleCompleteSession(session.id, !session.completed)}
-                                      >
-                                        {session.completed ? (
-                                          <Check className="h-4 w-4" />
-                                        ) : (
-                                          <Clock className="h-4 w-4" />
-                                        )}
-                                      </Button>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => deleteStudySession(session.id)}
-                                      >
-                                        <Trash2 className="h-4 w-4" />
-                                      </Button>
-                                    </div>
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
+                          })}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* Assignments Due */}
-                      {selectedDateAssignments.length > 0 && (
-                        <div>
-                          <h4 className="font-medium text-sm text-gray-600 mb-2 flex items-center">
-                            <Target className="h-4 w-4 mr-1 text-green-500" />
-                            Assignments Due
-                          </h4>
-                          <div className="space-y-2">
-                            {selectedDateAssignments.map((assignment) => {
-                              const course = courses.find(c => c.id === assignment.course_id);
-                              
-                              let badgeText: string;
-                              let badgeVariant: 'default' | 'destructive' | 'secondary';
+                    {/* Assignments Due */}
+                    {selectedDateAssignments.length > 0 && (
+                      <div>
+                        <h4 className="font-medium text-sm text-gray-600 mb-2 flex items-center">
+                          <Target className="h-4 w-4 mr-1 text-green-500" />
+                          Assignments Due
+                        </h4>
+                        <div className="space-y-2">
+                          {selectedDateAssignments.map((assignment) => {
+                            const course = courses.find(c => c.id === assignment.course_id);
+                            
+                            let badgeText: string;
+                            let badgeVariant: 'default' | 'destructive' | 'secondary';
 
-                              if (assignment.completed) {
-                                badgeText = "Completed";
-                                badgeVariant = "default";
-                              } else if (isToday(selectedDate)) {
-                                badgeText = "Due Today";
-                                badgeVariant = "destructive";
-                              } else if (isPast(selectedDate) && !isToday(selectedDate)) {
-                                badgeText = "Overdue";
-                                badgeVariant = "destructive";
-                              } else {
-                                badgeText = "Due";
-                                badgeVariant = "secondary";
-                              }
+                            if (assignment.completed) {
+                              badgeText = "Completed";
+                              badgeVariant = "default";
+                            } else if (isToday(selectedDate)) {
+                              badgeText = "Due Today";
+                              badgeVariant = "destructive";
+                            } else if (isPast(selectedDate) && !isToday(selectedDate)) {
+                              badgeText = "Overdue";
+                              badgeVariant = "destructive";
+                            } else {
+                              badgeText = "Due";
+                              badgeVariant = "secondary";
+                            }
 
-                              return (
-                                <div key={assignment.id} className="p-3 border rounded-lg bg-green-50">
-                                  <div className="flex justify-between items-start">
-                                    <div className="flex-1 pr-4">
-                                      <p className="font-medium">{assignment.title}</p>
-                                      <p className="text-sm text-gray-600">{course?.name || 'Unknown Course'}</p>
-                                      {assignment.description && (
-                                        <p className="text-sm text-gray-500 mt-1 break-words">{assignment.description}</p>
-                                      )}
-                                    </div>
-                                    <Badge variant={badgeVariant} className="flex-shrink-0">
-                                      {badgeText}
-                                    </Badge>
+                            return (
+                              <div key={assignment.id} className="p-3 border rounded-lg bg-green-50">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-1 pr-4">
+                                    <p className="font-medium">{assignment.title}</p>
+                                    <p className="text-sm text-gray-600">{course?.name || 'Unknown Course'}</p>
+                                    {assignment.description && (
+                                      <p className="text-sm text-gray-500 mt-1 break-words">{assignment.description}</p>
+                                    )}
                                   </div>
+                                  <Badge variant={badgeVariant} className="flex-shrink-0">
+                                    {badgeText}
+                                  </Badge>
                                 </div>
-                              );
-                            })}
-                          </div>
+                              </div>
+                            );
+                          })}
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {selectedDateSessions.length === 0 && selectedDateAssignments.length === 0 && (
-                        <p className="text-gray-500">No events scheduled for this day.</p>
-                      )}
-                    </div>
+                    {selectedDateSessions.length === 0 && selectedDateAssignments.length === 0 && (
+                      <p className="text-gray-500">No events scheduled for this day.</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
