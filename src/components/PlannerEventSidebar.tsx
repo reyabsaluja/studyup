@@ -18,22 +18,17 @@ import {
   AlertDialogTitle, 
   AlertDialogTrigger 
 } from "@/components/ui/alert-dialog";
+import type { Database } from '@/integrations/supabase/types';
+
+type Assignment = Database['public']['Tables']['assignments']['Row'];
+// NOTE: StudySession in DB has 'topic', but is likely aliased to 'title' in the hook.
+type StudySession = Database['public']['Tables']['study_sessions']['Row'] & { title: string; notes?: string };
+type Event = Assignment | StudySession;
 
 type Course = {
   id: string;
   name: string;
   color: string;
-};
-
-type Event = {
-  id: string;
-  course_id: string;
-  title: string;
-  description?: string;
-  notes?: string;
-  due_date?: string;
-  scheduled_date: string;
-  completed: boolean;
 };
 
 interface PlannerEventSidebarProps {
@@ -42,13 +37,17 @@ interface PlannerEventSidebarProps {
   courses: Course[];
   onClose: () => void;
   onUpdateAssignment: (data: { id: string; updates: any }) => void;
-  onCompleteAssignment: (assignment: Event) => void;
+  onCompleteAssignment: (assignment: Assignment) => void;
   onDeleteAssignment: (assignmentId: string) => void;
   onUpdateStudySession: (data: { id: string, completed: boolean }) => void;
   onDeleteStudySession: (sessionId: string) => void;
   isUpdating: boolean;
   isDeleting: boolean;
   isTogglingCompletion: boolean;
+}
+
+function isAssignment(event: Event): event is Assignment {
+  return 'due_date' in event;
 }
 
 const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
@@ -79,7 +78,10 @@ const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
     
     const course = courses.find(c => c.id === event.course_id);
 
-    const renderAssignmentDetails = () => (
+    const renderAssignmentDetails = () => {
+      if (!isAssignment(event)) return null;
+
+      return (
         <>
             <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div>
@@ -161,9 +163,13 @@ const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
                 </AlertDialog>
             </CardFooter>
         </>
-    );
+    )
+    };
 
-    const renderStudySessionDetails = () => (
+    const renderStudySessionDetails = () => {
+      if (isAssignment(event)) return null;
+
+      return (
         <>
             <CardHeader className="flex flex-row items-start justify-between pb-2">
                 <div>
@@ -227,7 +233,8 @@ const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
                 </AlertDialog>
             </CardFooter>
         </>
-    );
+      )
+    };
     
     return (
         <Card className="w-96 flex-shrink-0 flex flex-col h-full bg-white shadow-lg">
