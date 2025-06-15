@@ -28,21 +28,23 @@ const LandingPage = () => {
         </div>
       </header>
 
-      <main className="flex-grow flex flex-col items-center text-center px-4 pt-16 md:pt-24 z-10">
-        <h1 className="text-[40px] leading-[44px] font-medium tracking-[-.06rem] bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 py-2">
-          Unlock Your Academic Potential
-        </h1>
-        <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-xl lg:max-w-2xl mx-auto">
-          StudyUp is the all-in-one academic planner and AI tutor. Organize your schedule, manage assignments, and get instant help.
-        </p>
-        <div className="mt-8">
-          <Button size="lg" onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary/90 text-primary-foreground">
-            Get Started for Free
-            <ArrowRight className="ml-2 h-5 w-5" />
-          </Button>
+      <main className="container mx-auto px-6 flex-grow flex flex-col pt-16 md:pt-24 z-10">
+        <div className="max-w-3xl">
+          <h1 className="text-[40px] leading-[44px] font-medium tracking-[-.06rem] bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 py-2">
+            Unlock Your Academic Potential
+          </h1>
+          <p className="mt-4 text-sm md:text-base text-muted-foreground">
+            StudyUp is the all-in-one academic planner and AI tutor. Organize your schedule, manage assignments, and get instant help.
+          </p>
+          <div className="mt-8">
+            <Button size="lg" onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+              Get Started for Free
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
         </div>
 
-        <div className="relative mt-16 md:mt-24 w-full max-w-5xl mx-auto px-4">
+        <div className="relative mt-16 md:mt-24 w-full">
           <div className="absolute -inset-2 rounded-xl bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 opacity-20 blur-2xl"></div>
           <img 
             src="/lovable-uploads/8321a47f-6fa8-4086-870a-1b76b48edcb3.png" 
