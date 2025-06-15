@@ -295,54 +295,6 @@ export const useAllAssignments = () => {
     },
   });
 
-  const updateAssignmentMutation = useMutation({
-    mutationFn: async ({ id, updates }: { id: string; updates: AssignmentUpdate }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      // Get assignment details before update for activity tracking
-      const { data: originalAssignment, error: fetchError } = await supabase
-        .from('assignments')
-        .select('*, courses(name)')
-        .eq('id', id)
-        .single();
-
-      if (fetchError) throw fetchError;
-
-      const { data, error } = await supabase
-        .from('assignments')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Track activity
-      await supabase
-        .from('activities')
-        .insert({
-          user_id: user.id,
-          activity_type: 'assignment_updated',
-          activity_description: `Updated assignment: ${updates.title || originalAssignment.title}`,
-          related_course_id: originalAssignment.course_id,
-          related_course_name: originalAssignment.courses?.name || 'Unknown Course',
-        });
-
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['assignments'] });
-      queryClient.invalidateQueries({ queryKey: ['courses'] });
-      queryClient.invalidateQueries({ queryKey: ['activities'] });
-      toast.success('Assignment updated successfully!');
-    },
-    onError: (error) => {
-      console.error('Error updating assignment:', error);
-      toast.error('Failed to update assignment');
-    },
-  });
-  
   const deleteAssignmentMutation = useMutation({
     mutationFn: async (assignmentId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -433,8 +385,6 @@ export const useAllAssignments = () => {
     error,
     createAssignment: createAssignmentMutation.mutate,
     isCreating: createAssignmentMutation.isPending,
-    updateAssignment: updateAssignmentMutation.mutate,
-    isUpdating: updateAssignmentMutation.isPending,
     deleteAssignment: deleteAssignmentMutation.mutate,
     isDeleting: deleteAssignmentMutation.isPending,
     toggleAssignmentCompletion: toggleAssignmentCompletionMutation.mutate,
