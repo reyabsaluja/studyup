@@ -1,25 +1,63 @@
 
+import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, ArrowLeft, MessageSquare, Calendar } from 'lucide-react';
+import { Loader2, ArrowLeft, MessageSquare, Calendar, Edit, Brain, X } from 'lucide-react';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle, 
+  AlertDialogTrigger 
+} from "@/components/ui/alert-dialog";
 import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import { useAssignment } from '@/hooks/useAssignment';
 import { useAiChats } from '@/hooks/useAiChats';
 import type { Database } from '@/integrations/supabase/types';
+import EditAssignmentDialog from '@/components/EditAssignmentDialog';
+import { useAssignments } from '@/hooks/useAssignments';
+import { useQueryClient } from '@tanstack/react-query';
 
 type AiChat = Database['public']['Tables']['ai_chats']['Row'];
 
 const AssignmentPage = () => {
   const { courseId, assignmentId } = useParams<{ courseId: string; assignmentId: string }>();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [showEditDialog, setShowEditDialog] = useState(false);
 
   const { assignment, isLoading: assignmentLoading } = useAssignment(assignmentId);
-  const { chats, isLoading: chatsLoading } = useAiChats(assignmentId);
+  const { chats, isLoading: chatsLoading, unlinkChat, isUnlinking } = useAiChats(assignmentId);
+  const { updateAssignment, isUpdating } = useAssignments(courseId);
 
   const handleChatClick = (chat: AiChat) => {
     navigate('/ai-tutor', { state: { chatToLoad: chat } });
+  };
+  
+  const handleUpdateAssignment = (data: { id: string; updates: any }) => {
+    if (!updateAssignment) return;
+    updateAssignment(data, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['assignment', assignmentId] });
+      },
+    });
+  };
+
+  const handleNewChat = () => {
+    if (!assignment) return;
+    navigate('/ai-tutor', {
+      state: {
+        assignmentId: assignment.id,
+        context: `I'm working on the assignment "${assignment.title}" for the course "${assignment.courses?.name}". The assignment description is: ${assignment.description || ''}`
+      }
+    });
   };
 
   if (assignmentLoading || chatsLoading) {
@@ -67,7 +105,19 @@ const AssignmentPage = () => {
                 </p>
               </div>
             </div>
-            <UserMenu />
+            <div className="flex items-center space-x-2">
+              <EditAssignmentDialog
+                assignment={assignment}
+                onUpdate={handleUpdateAssignment}
+                isUpdating={isUpdating}
+              >
+                <Button variant="outline">
+                  <Edit className="h-4 w-4 mr-2" />
+                  Edit Assignment
+                </Button>
+              </EditAssignmentDialog>
+              <UserMenu />
+            </div>
           </div>
         </header>
 
@@ -79,7 +129,7 @@ const AssignmentPage = () => {
             <CardContent className="space-y-4">
               <div>
                 <h3 className="font-semibold">Description</h3>
-                <p className="text-gray-700">{assignment.description || 'No description provided.'}</p>
+                <p className="text-gray-700 whitespace-pre-wrap">{assignment.description || 'No description provided.'}</p>
               </div>
               {assignment.due_date && (
                 <div className="flex items-center text-sm text-gray-600">
@@ -92,25 +142,52 @@ const AssignmentPage = () => {
 
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center">
-                <MessageSquare className="h-5 w-5 mr-2" />
-                Linked AI Tutor Chats
+              <CardTitle className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <MessageSquare className="h-5 w-5 mr-2" />
+                  Linked AI Tutor Chats
+                </div>
+                <Button size="sm" onClick={handleNewChat}>
+                  <Brain className="h-4 w-4 mr-2" />
+                  Start New Chat
+                </Button>
               </CardTitle>
             </CardHeader>
             <CardContent>
               {chats && chats.length > 0 ? (
                 <ul className="space-y-3">
                   {chats.map(chat => (
-                    <li key={chat.id}>
+                    <li key={chat.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                       <button
                         onClick={() => handleChatClick(chat)}
-                        className="w-full text-left p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                        className="flex-grow text-left"
                       >
                         <p className="font-semibold">{chat.title}</p>
                         <p className="text-sm text-gray-500">
                           Saved on {new Date(chat.created_at).toLocaleString()}
                         </p>
                       </button>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                           <Button variant="ghost" size="icon" className="text-red-500 hover:text-red-700" disabled={isUnlinking}>
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Unlink Chat?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to unlink "{chat.title}" from this assignment? The chat itself will not be deleted.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => unlinkChat(chat.id)} className="bg-destructive hover:bg-destructive/90">Unlink</AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+
                     </li>
                   ))}
                 </ul>

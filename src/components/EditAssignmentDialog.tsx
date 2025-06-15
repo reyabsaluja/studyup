@@ -1,30 +1,31 @@
+
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import type { Database } from '@/integrations/supabase/types';
+import { Edit } from 'lucide-react';
 
 type Assignment = Database['public']['Tables']['assignments']['Row'];
 
 interface EditAssignmentDialogProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
   assignment: Assignment;
   onUpdate?: (data: { id: string; updates: any }) => void;
-  onUpdateAssignment?: (data: { id: string; updates: any }) => void; // Backward compatibility
+  onUpdateAssignment?: (data: { id:string; updates: any }) => void; // Backward compatibility
   isUpdating?: boolean;
+  children?: React.ReactNode;
 }
 
 const EditAssignmentDialog = ({ 
-  open = false,
-  onOpenChange = () => {},
   assignment, 
   onUpdate,
   onUpdateAssignment, // Backward compatibility
-  isUpdating = false 
+  isUpdating = false,
+  children
 }: EditAssignmentDialogProps) => {
+  const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     title: assignment.title,
     description: assignment.description || '',
@@ -49,23 +50,30 @@ const EditAssignmentDialog = ({
       id: assignment.id,
       updates: {
         title: formData.title.trim(),
-        description: formData.description.trim() || undefined,
-        due_date: formData.due_date || undefined
+        description: formData.description.trim() || null,
+        due_date: formData.due_date || null
       }
     };
 
-    // Use the new prop if available, otherwise use the old one for backward compatibility
     if (onUpdate) {
       onUpdate(updateData);
     } else if (onUpdateAssignment) {
       onUpdateAssignment(updateData);
     }
 
-    onOpenChange(false);
+    // We optimistically close the dialog. It can be improved to close on mutation success.
+    setOpen(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        {children || (
+          <Button variant="ghost" size="sm">
+            <Edit className="h-4 w-4" />
+          </Button>
+        )}
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Assignment</DialogTitle>
@@ -104,7 +112,7 @@ const EditAssignmentDialog = ({
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
             <Button type="submit" disabled={isUpdating || !formData.title.trim()}>

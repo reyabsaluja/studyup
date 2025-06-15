@@ -281,7 +281,12 @@ const CoursePage = () => {
                               )}
                             </Link>
                           </div>
-                          <div className="flex items-center space-x-2 ml-4">
+                          <div className="flex items-center space-x-1 ml-4">
+                            <Button asChild variant="ghost" size="sm">
+                              <Link to={`/courses/${courseId}/assignments/${assignment.id}`}>
+                                <Eye className="h-4 w-4" />
+                              </Link>
+                            </Button>
                             <EditAssignmentDialog
                               assignment={assignment}
                               onUpdateAssignment={handleUpdateAssignment}
