@@ -29,7 +29,7 @@ const LandingPage = () => {
       </header>
 
       <main className="flex-grow flex flex-col items-center text-center px-4 pt-16 md:pt-24 z-10">
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter py-2">
+        <h1 className="text-[40px] leading-[44px] tracking-[-0.06rem] font-medium md:text-6xl lg:text-7xl py-2">
           Den is where humans and agents
           <br />
           collaborate to get more done
