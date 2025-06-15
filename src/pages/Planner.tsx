@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +12,6 @@ import AddStudySessionDialog from '@/components/AddStudySessionDialog';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
 import { useAllAssignments } from '@/hooks/useAssignments';
-import { Sidebar, SidebarContent, SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 const Planner = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -105,145 +105,18 @@ const Planner = () => {
   return (
     <div className="min-h-screen bg-gray-50 flex font-sans">
       <Navigation />
-      <SidebarProvider>
-        <div className="flex-1 flex w-full">
-          <Sidebar side="right" collapsible="icon" className="w-[350px] bg-white border-l">
-            <SidebarContent className="p-6 flex flex-col gap-6">
-              {/* Weekly Progress */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Target className="h-5 w-5 mr-2" />
-                    This Week
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between text-sm mb-2">
-                        <span>Study Sessions</span>
-                        <span>{weeklyProgress.completed}/{weeklyProgress.total}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full transition-all"
-                          style={{ 
-                            width: weeklyProgress.total > 0 
-                              ? `${(weeklyProgress.completed / weeklyProgress.total) * 100}%` 
-                              : '0%' 
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 text-xs">
-                      {Array.from({ length: 7 }, (_, i) => {
-                        const date = addDays(startOfWeek(new Date()), i);
-                        const dayCode = format(date, 'EEE').substring(0, 1);
-                        const hasSessions = getSessionsForDate(date).length > 0;
-                        return (
-                          <div 
-                            key={i} 
-                            className={`text-center p-1 rounded ${
-                              hasSessions ? 'bg-blue-100 text-blue-800' : 'text-gray-400'
-                            }`}
-                          >
-                            {dayCode}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+      <main className="flex-1">
+        <header className="bg-white border-b border-gray-200 px-6 py-4">
+          <div className="flex items-center justify-between">
+            <h1 className="text-xl font-semibold text-gray-900">Planner</h1>
+            <UserMenu />
+          </div>
+        </header>
 
-              {/* Upcoming Deadlines */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <CalendarIcon className="h-5 w-5 mr-2" />
-                    Upcoming Deadlines
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {upcomingDeadlines.length > 0 ? (
-                    <div className="space-y-3">
-                      {upcomingDeadlines.map((assignment) => {
-                        const course = courses.find(c => c.id === assignment.course_id);
-                        const dueDate = new Date(assignment.due_date!);
-                        const daysUntilDue = Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                        
-                        return (
-                          <div key={assignment.id} className="p-3 border rounded-lg hover:bg-gray-50">
-                            <p className="font-medium text-sm">{assignment.title}</p>
-                            <p className="text-xs text-gray-600">{course?.name || 'Unknown Course'}</p>
-                            <div className="flex justify-between items-center mt-2">
-                              <span className="text-xs text-gray-500">
-                                {format(dueDate, 'MMM d')}
-                              </span>
-                              <Badge 
-                                variant={daysUntilDue <= 3 ? "destructive" : "secondary"}
-                                className="text-xs"
-                              >
-                                {daysUntilDue === 0 ? 'Today' : daysUntilDue === 1 ? 'Tomorrow' : `${daysUntilDue} days`}
-                              </Badge>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-gray-500">No upcoming deadlines</p>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Study Statistics */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <BookOpen className="h-5 w-5 mr-2" />
-                    Study Stats
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Total Sessions</span>
-                      <span className="font-medium">{studySessions.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Completed</span>
-                      <span className="font-medium text-green-600">
-                        {studySessions.filter(s => s.completed).length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Active Courses</span>
-                      <span className="font-medium">{courses.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Pending Assignments</span>
-                      <span className="font-medium text-orange-600">
-                        {assignments.filter(a => !a.completed && a.due_date && new Date(a.due_date) > new Date()).length}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </SidebarContent>
-          </Sidebar>
-          <SidebarInset>
-            <header className="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 z-20">
-              <div className="flex items-center justify-between">
-                <h1 className="text-xl font-semibold text-gray-900">Planner</h1>
-                  <div className="flex items-center gap-4">
-                    <UserMenu />
-                    <SidebarTrigger />
-                  </div>
-              </div>
-            </header>
-
-            <div className="p-6">
+        <div className="p-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Calendar Section */}
+            <div className="lg:col-span-2">
               <Card>
                 <CardHeader>
                   <div className="flex justify-between items-center">
@@ -408,9 +281,134 @@ const Planner = () => {
                 </CardContent>
               </Card>
             </div>
-          </SidebarInset>
+
+            {/* Sidebar */}
+            <div className="space-y-6">
+              {/* Weekly Progress */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <Target className="h-5 w-5 mr-2" />
+                    This Week
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    <div>
+                      <div className="flex justify-between text-sm mb-2">
+                        <span>Study Sessions</span>
+                        <span>{weeklyProgress.completed}/{weeklyProgress.total}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-blue-600 h-2 rounded-full transition-all"
+                          style={{ 
+                            width: weeklyProgress.total > 0 
+                              ? `${(weeklyProgress.completed / weeklyProgress.total) * 100}%` 
+                              : '0%' 
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-7 gap-1 text-xs">
+                      {Array.from({ length: 7 }, (_, i) => {
+                        const date = addDays(startOfWeek(new Date()), i);
+                        const dayCode = format(date, 'EEE').substring(0, 1);
+                        const hasSessions = getSessionsForDate(date).length > 0;
+                        return (
+                          <div 
+                            key={i} 
+                            className={`text-center p-1 rounded ${
+                              hasSessions ? 'bg-blue-100 text-blue-800' : 'text-gray-400'
+                            }`}
+                          >
+                            {dayCode}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Upcoming Deadlines */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <CalendarIcon className="h-5 w-5 mr-2" />
+                    Upcoming Deadlines
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {upcomingDeadlines.length > 0 ? (
+                    <div className="space-y-3">
+                      {upcomingDeadlines.map((assignment) => {
+                        const course = courses.find(c => c.id === assignment.course_id);
+                        const dueDate = new Date(assignment.due_date!);
+                        const daysUntilDue = Math.ceil((dueDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        return (
+                          <div key={assignment.id} className="p-3 border rounded-lg hover:bg-gray-50">
+                            <p className="font-medium text-sm">{assignment.title}</p>
+                            <p className="text-xs text-gray-600">{course?.name || 'Unknown Course'}</p>
+                            <div className="flex justify-between items-center mt-2">
+                              <span className="text-xs text-gray-500">
+                                {format(dueDate, 'MMM d')}
+                              </span>
+                              <Badge 
+                                variant={daysUntilDue <= 3 ? "destructive" : "secondary"}
+                                className="text-xs"
+                              >
+                                {daysUntilDue === 0 ? 'Today' : daysUntilDue === 1 ? 'Tomorrow' : `${daysUntilDue} days`}
+                              </Badge>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">No upcoming deadlines</p>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Study Statistics */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    Study Stats
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Total Sessions</span>
+                      <span className="font-medium">{studySessions.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Completed</span>
+                      <span className="font-medium text-green-600">
+                        {studySessions.filter(s => s.completed).length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Active Courses</span>
+                      <span className="font-medium">{courses.length}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Pending Assignments</span>
+                      <span className="font-medium text-orange-600">
+                        {assignments.filter(a => !a.completed && a.due_date && new Date(a.due_date) > new Date()).length}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
-      </SidebarProvider>
+      </main>
 
       <AddStudySessionDialog 
         open={showAddDialog} 
