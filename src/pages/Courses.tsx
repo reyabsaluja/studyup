@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Calendar, FileText, Users, Brain, Loader2 } from "lucide-react";
+import { BookOpen, Calendar, FileText, Users, Brain, Loader2, MessageSquare } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import UserMenu from "@/components/UserMenu";
 import AddCourseDialog from "@/components/AddCourseDialog";
@@ -166,7 +166,10 @@ const Courses = () => {
           <div className="mt-8">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="bg-blue-50 border-blue-200">
+              <Card 
+                className="bg-blue-50 border-blue-200 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => navigate('/planner')}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-3">
                     <Brain className="h-8 w-8 text-blue-600" />
@@ -178,7 +181,10 @@ const Courses = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-green-50 border-green-200">
+              <Card 
+                className="bg-green-50 border-green-200 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => navigate('/upload')}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-3">
                     <FileText className="h-8 w-8 text-green-600" />
@@ -190,13 +196,16 @@ const Courses = () => {
                 </CardContent>
               </Card>
 
-              <Card className="bg-purple-50 border-purple-200">
+              <Card 
+                className="bg-purple-50 border-purple-200 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => navigate('/ai-tutor')}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-center space-x-3">
-                    <Users className="h-8 w-8 text-purple-600" />
+                    <MessageSquare className="h-8 w-8 text-purple-600" />
                     <div>
-                      <h4 className="font-semibold text-gray-900">Study Groups</h4>
-                      <p className="text-sm text-gray-600">Collaborate with AI assistance</p>
+                      <h4 className="font-semibold text-gray-900">AI Tutor</h4>
+                      <p className="text-sm text-gray-600">Ask questions and get instant help</p>
                     </div>
                   </div>
                 </CardContent>
