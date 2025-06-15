@@ -14,6 +14,7 @@ interface EditAssignmentDialogProps {
   onOpenChange: (open: boolean) => void;
   assignment: Assignment;
   onUpdate?: (data: { id: string; updates: any }) => void;
+  onUpdateAssignment?: (data: { id: string; updates: any }) => void; // Backward compatibility
   isUpdating?: boolean;
 }
 
@@ -21,7 +22,8 @@ const EditAssignmentDialog = ({
   open, 
   onOpenChange, 
   assignment, 
-  onUpdate, 
+  onUpdate,
+  onUpdateAssignment, // Backward compatibility
   isUpdating = false 
 }: EditAssignmentDialogProps) => {
   const [formData, setFormData] = useState({
@@ -42,16 +44,23 @@ const EditAssignmentDialog = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.title.trim() || !onUpdate) return;
+    if (!formData.title.trim()) return;
 
-    onUpdate({
+    const updateData = {
       id: assignment.id,
       updates: {
         title: formData.title.trim(),
         description: formData.description.trim() || undefined,
         due_date: formData.due_date || undefined
       }
-    });
+    };
+
+    // Use the new prop if available, otherwise use the old one for backward compatibility
+    if (onUpdate) {
+      onUpdate(updateData);
+    } else if (onUpdateAssignment) {
+      onUpdateAssignment(updateData);
+    }
 
     onOpenChange(false);
   };

@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,8 +50,14 @@ const EventDetailsSidebar = ({
   isTogglingCompletion = false,
 }: EventDetailsSidebarProps) => {
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [currentEvent, setCurrentEvent] = useState(event);
 
-  if (!event || !eventType) {
+  // Update local state when event prop changes
+  useEffect(() => {
+    setCurrentEvent(event);
+  }, [event]);
+
+  if (!currentEvent || !eventType) {
     return (
       <div className="w-80 bg-white border-l border-gray-200 flex items-center justify-center text-gray-500">
         <div className="text-center">
@@ -62,7 +68,7 @@ const EventDetailsSidebar = ({
     );
   }
 
-  const course = courses.find(c => c.id === event.course_id);
+  const course = courses.find(c => c.id === currentEvent.course_id);
   const isAssignment = eventType === 'assignment';
   const isStudySession = eventType === 'study';
 
@@ -72,19 +78,31 @@ const EventDetailsSidebar = ({
     }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (isAssignment && onCompleteAssignment) {
-      onCompleteAssignment(event);
+      onCompleteAssignment(currentEvent);
+      // Optimistically update the local state
+      setCurrentEvent({ ...currentEvent, completed: !currentEvent.completed });
     } else if (isStudySession && onUpdateStudySession) {
-      onUpdateStudySession({ id: event.id, completed: !event.completed });
+      onUpdateStudySession({ id: currentEvent.id, completed: !currentEvent.completed });
+      // Optimistically update the local state
+      setCurrentEvent({ ...currentEvent, completed: !currentEvent.completed });
     }
   };
 
   const handleDelete = () => {
     if (isAssignment && onDeleteAssignment) {
-      onDeleteAssignment(event.id);
+      onDeleteAssignment(currentEvent.id);
     } else if (isStudySession && onDeleteStudySession) {
-      onDeleteStudySession(event.id);
+      onDeleteStudySession(currentEvent.id);
+    }
+  };
+
+  const handleUpdateAssignment = (data: { id: string; updates: any }) => {
+    if (onUpdateAssignment) {
+      onUpdateAssignment(data);
+      // Optimistically update the local state
+      setCurrentEvent({ ...currentEvent, ...data.updates });
     }
   };
 
@@ -117,10 +135,10 @@ const EventDetailsSidebar = ({
           {/* Title */}
           <div>
             <h2 className="text-lg font-semibold text-gray-900 mb-2">
-              {event.title}
+              {currentEvent.title}
             </h2>
-            {event.description && (
-              <p className="text-sm text-gray-600">{event.description}</p>
+            {currentEvent.description && (
+              <p className="text-sm text-gray-600">{currentEvent.description}</p>
             )}
           </div>
 
@@ -140,42 +158,42 @@ const EventDetailsSidebar = ({
           {/* Status */}
           <div className="flex items-center gap-2">
             <Badge 
-              variant={event.completed ? "default" : "secondary"}
-              className={event.completed ? "bg-green-100 text-green-800" : ""}
+              variant={currentEvent.completed ? "default" : "secondary"}
+              className={currentEvent.completed ? "bg-green-100 text-green-800" : ""}
             >
-              {event.completed ? 'Completed' : 'Pending'}
+              {currentEvent.completed ? 'Completed' : 'Pending'}
             </Badge>
           </div>
 
           {/* Date/Time Information */}
           <div className="space-y-2">
-            {isAssignment && event.due_date && (
+            {isAssignment && currentEvent.due_date && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Calendar className="h-4 w-4" />
-                <span>Due: {format(new Date(event.due_date), 'MMM d, yyyy \'at\' h:mm a')}</span>
+                <span>Due: {format(new Date(currentEvent.due_date), 'MMM d, yyyy \'at\' h:mm a')}</span>
               </div>
             )}
             
-            {isStudySession && event.scheduled_date && (
+            {isStudySession && currentEvent.scheduled_date && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Clock className="h-4 w-4" />
-                <span>Scheduled: {format(new Date(event.scheduled_date), 'MMM d, yyyy \'at\' h:mm a')}</span>
+                <span>Scheduled: {format(new Date(currentEvent.scheduled_date), 'MMM d, yyyy \'at\' h:mm a')}</span>
               </div>
             )}
 
-            {isStudySession && event.duration && (
+            {isStudySession && currentEvent.duration && (
               <div className="flex items-center gap-2 text-sm text-gray-600">
                 <Clock className="h-4 w-4" />
-                <span>Duration: {event.duration} minutes</span>
+                <span>Duration: {currentEvent.duration} minutes</span>
               </div>
             )}
           </div>
 
           {/* Priority (for assignments) */}
-          {isAssignment && event.priority && (
+          {isAssignment && currentEvent.priority && (
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Target className="h-4 w-4" />
-              <span>Priority: {event.priority}</span>
+              <span>Priority: {currentEvent.priority}</span>
             </div>
           )}
 
@@ -200,7 +218,7 @@ const EventDetailsSidebar = ({
               disabled={isTogglingCompletion}
             >
               <Check className="h-4 w-4 mr-2" />
-              Mark as {event.completed ? 'Incomplete' : 'Complete'}
+              Mark as {currentEvent.completed ? 'Incomplete' : 'Complete'}
             </Button>
 
             <Button
@@ -221,8 +239,8 @@ const EventDetailsSidebar = ({
         <EditAssignmentDialog
           open={showEditDialog}
           onOpenChange={setShowEditDialog}
-          assignment={event}
-          onUpdate={onUpdateAssignment}
+          assignment={currentEvent}
+          onUpdate={handleUpdateAssignment}
           isUpdating={isUpdating}
         />
       )}
