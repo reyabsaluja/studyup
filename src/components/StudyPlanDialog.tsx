@@ -59,13 +59,13 @@ const StudyPlanDialog: React.FC<StudyPlanDialogProps> = ({
         <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-6 py-4 min-h-0">
           <div className="flex flex-col gap-4">
             <h3 className="font-semibold text-lg">Rationale</h3>
-            <ScrollArea className="flex-1">
+            <ScrollArea className="max-h-96">
               <p className="text-sm text-muted-foreground whitespace-pre-wrap pr-4">{plan.rationale}</p>
             </ScrollArea>
           </div>
           <div className="flex flex-col gap-4">
              <h3 className="font-semibold text-lg">Proposed Sessions</h3>
-            <ScrollArea className="flex-1">
+            <ScrollArea className="max-h-96">
               <div className="space-y-4 pr-4">
                 {plan.sessions.map((session, index) => (
                   <div key={index} className="p-3 border rounded-lg">
