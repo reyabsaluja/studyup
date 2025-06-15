@@ -29,7 +29,7 @@ const LandingPage = () => {
       </header>
 
       <main className="flex-grow flex flex-col items-center text-center px-4 pt-16 md:pt-24 z-10">
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-normal tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 py-2">
+        <h1 className="text-[40px] leading-[44px] font-medium tracking-[-.06rem] bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 py-2">
           Unlock Your Academic Potential
         </h1>
         <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-xl lg:max-w-2xl mx-auto">
