@@ -23,7 +23,7 @@ const LandingPage = () => {
             Login
           </Button>
           <Button onClick={() => navigate('/auth')} variant="default">
-            Get Started for Free <ArrowRight className="ml-2 h-4 w-4 hidden md:inline" />
+            Get Started for Free
           </Button>
         </div>
       </header>
@@ -36,7 +36,7 @@ const LandingPage = () => {
           <p className="mt-4 text-sm md:text-base text-muted-foreground">
             StudyUp is the all-in-one academic planner and AI tutor. Organize your schedule, manage assignments, and get instant help.
           </p>
-          <div className="mt-8 mb-8">
+          <div className="mt-8 mb-5">
             <Button size="lg" onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2">
               Try it Out
             </Button>
@@ -58,7 +58,6 @@ const LandingPage = () => {
             <div className="w-6 h-6 bg-primary rounded-md flex items-center justify-center">
                 <Brain className="h-4 w-4 text-primary-foreground" />
             </div>
-            <span className="font-semibold text-foreground">StudyUp</span>
         </div>
         <div className="flex items-center space-x-4">
             <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors">
