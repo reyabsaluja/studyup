@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   Dialog,
@@ -59,13 +58,13 @@ const StudyPlanDialog: React.FC<StudyPlanDialogProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 py-4 max-h-[60vh]">
           <div className="flex flex-col gap-4">
             <h3 className="font-semibold text-lg">Rationale</h3>
-            <ScrollArea className="h-full pr-4">
+            <ScrollArea className="flex-1 min-h-0 pr-4">
               <p className="text-sm text-muted-foreground whitespace-pre-wrap">{plan.rationale}</p>
             </ScrollArea>
           </div>
           <div className="flex flex-col gap-4">
              <h3 className="font-semibold text-lg">Proposed Sessions</h3>
-            <ScrollArea className="h-full pr-4">
+            <ScrollArea className="flex-1 min-h-0 pr-4">
               <div className="space-y-4">
                 {plan.sessions.map((session, index) => (
                   <div key={index} className="p-3 border rounded-lg">
