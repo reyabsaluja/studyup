@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -26,8 +26,9 @@ const highlightStyle = `
 
 const AITutor = () => {
   const [inputMessage, setInputMessage] = useState('');
-  const { messages, isLoading, sendMessage, clearMessages, saveChat, isSaving } = useGeminiChat();
+  const { messages, isLoading, sendMessage, clearMessages, saveChat, isSaving, loadChat } = useGeminiChat();
   const location = useLocation();
+  const navigate = useNavigate();
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const { assignments } = useAllAssignments();
 
@@ -45,6 +46,15 @@ const AITutor = () => {
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  useEffect(() => {
+    const chatToLoad = location.state?.chatToLoad;
+    if (chatToLoad) {
+      loadChat(chatToLoad);
+      // Clear the state from location to prevent reloading on page refresh or navigation
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, loadChat, navigate, location.pathname]);
 
   useEffect(() => {
     // Detect if a new assistant message arrived

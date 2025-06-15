@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Calendar, FileText, Brain, ArrowLeft, Plus, Loader2, Download, Eye, Trash2, Edit, Check, X } from "lucide-react";
@@ -262,8 +262,9 @@ const CoursePage = () => {
                               checked={assignment.completed || false}
                               onCheckedChange={() => handleToggleCompletion(assignment)}
                               disabled={isTogglingCompletion}
+                              aria-label={`Mark ${assignment.title} as ${assignment.completed ? 'incomplete' : 'complete'}`}
                             />
-                            <div className="flex-1">
+                            <Link to={`/courses/${courseId}/assignments/${assignment.id}`} className="flex-1 cursor-pointer">
                               <h4 className={`font-semibold ${assignment.completed ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
                                 {assignment.title}
                               </h4>
@@ -278,7 +279,7 @@ const CoursePage = () => {
                                   Due: {new Date(assignment.due_date).toLocaleDateString()}
                                 </div>
                               )}
-                            </div>
+                            </Link>
                           </div>
                           <div className="flex items-center space-x-2 ml-4">
                             <EditAssignmentDialog

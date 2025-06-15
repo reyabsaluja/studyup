@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { Database } from '@/integrations/supabase/types';
 
 interface ChatMessage {
   id: string;
@@ -11,6 +12,8 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+type AiChat = Database['public']['Tables']['ai_chats']['Row'];
+
 interface UseGeminiChatReturn {
   messages: ChatMessage[];
   isLoading: boolean;
@@ -18,6 +21,7 @@ interface UseGeminiChatReturn {
   clearMessages: () => void;
   saveChat: (data: { title: string; assignment_id?: string }) => void;
   isSaving: boolean;
+  loadChat: (chat: AiChat) => void;
 }
 
 export const useGeminiChat = (): UseGeminiChatReturn => {
@@ -62,6 +66,21 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
       return;
     }
     performSave({ title, assignment_id });
+  };
+
+  const loadChat = (chat: AiChat) => {
+    if (chat.messages && Array.isArray(chat.messages)) {
+      const loadedMessages: ChatMessage[] = chat.messages.map((msg: any) => ({
+        id: msg.id,
+        role: msg.role,
+        content: msg.content,
+        timestamp: new Date(msg.timestamp),
+      }));
+      setMessages(loadedMessages);
+      toast.info(`Loaded chat: "${chat.title}"`);
+    } else {
+      toast.error("Could not load chat. Invalid format.");
+    }
   };
 
   const sendMessage = async (message: string, context?: string) => {
@@ -121,5 +140,6 @@ export const useGeminiChat = (): UseGeminiChatReturn => {
     clearMessages,
     saveChat,
     isSaving,
+    loadChat,
   };
 };
