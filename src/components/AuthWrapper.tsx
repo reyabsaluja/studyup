@@ -40,7 +40,7 @@ const AuthWrapper = ({ children }: AuthWrapperProps) => {
       const publicPaths = ["/auth", "/"];
       if (!user && !publicPaths.includes(location.pathname)) {
         navigate("/auth");
-      } else if (user && location.pathname === "/auth") {
+      } else if (user && publicPaths.includes(location.pathname)) {
         navigate("/dashboard");
       }
     }
