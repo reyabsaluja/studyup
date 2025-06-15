@@ -22,16 +22,21 @@ const AddAssignmentDialog = ({ open, onOpenChange, initialDueDate }: AddAssignme
     due_date: '',
     course_id: ''
   });
-  
+
   const { createAssignment, isCreating } = useAllAssignments();
   const { courses } = useCourses();
 
-  // Set initial due date when dialog opens
+  // Set initial due date when dialog opens, preserving HH:mm and date
   useEffect(() => {
     if (open && initialDueDate) {
-      const isoString = initialDueDate.toISOString().slice(0, 16);
+      const isoString = initialDueDate.toISOString().slice(0, 16); // 'YYYY-MM-DDTHH:mm'
       setFormData(prev => ({ ...prev, due_date: isoString }));
     }
+    // If no initialDueDate (slot), clear due_date
+    if (open && !initialDueDate) {
+      setFormData(prev => ({ ...prev, due_date: '' }));
+    }
+    // eslint-disable-next-line
   }, [open, initialDueDate]);
 
   const handleSubmit = async (e: React.FormEvent) => {

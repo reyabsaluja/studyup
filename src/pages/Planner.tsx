@@ -77,6 +77,20 @@ const Planner = () => {
     setShowTimeSlotPopover(true);
   };
 
+  const handleDeleteAssignment = (assignmentId: string) => {
+    deleteAssignment(assignmentId);
+    // Clear sidebar after deletion
+    setSelectedEvent(null);
+    setSelectedEventType(null);
+  };
+
+  const handleDeleteStudySession = (sessionId: string) => {
+    deleteStudySession(sessionId);
+    // Clear sidebar after deletion
+    setSelectedEvent(null);
+    setSelectedEventType(null);
+  };
+
   const handleAddStudySession = () => {
     setShowAddStudySessionDialog(true);
     setShowTimeSlotPopover(false);
@@ -85,10 +99,6 @@ const Planner = () => {
   const handleAddAssignment = () => {
     setShowAddAssignmentDialog(true);
     setShowTimeSlotPopover(false);
-  };
-
-  const handleDeleteAssignment = (assignmentId: string) => {
-    deleteAssignment(assignmentId);
   };
 
   const handleCompleteAssignment = (assignment: any) => {
@@ -195,7 +205,7 @@ const Planner = () => {
             onCompleteAssignment={handleCompleteAssignment}
             onDeleteAssignment={handleDeleteAssignment}
             onUpdateStudySession={updateStudySession}
-            onDeleteStudySession={deleteStudySession}
+            onDeleteStudySession={handleDeleteStudySession}
             isUpdating={isUpdating}
             isDeleting={isDeleting}
             isTogglingCompletion={isTogglingCompletion}
@@ -206,13 +216,15 @@ const Planner = () => {
       <AddStudySessionDialog 
         open={showAddStudySessionDialog} 
         onOpenChange={setShowAddStudySessionDialog}
+        // Always use time slot START as scheduled date
         selectedDate={selectedTimeSlot?.startTime || selectedDate}
       />
       
       <AddAssignmentDialog 
         open={showAddAssignmentDialog} 
         onOpenChange={setShowAddAssignmentDialog}
-        initialDueDate={selectedTimeSlot?.endTime || selectedDate}
+        // Always use slot START for due date, not END
+        initialDueDate={selectedTimeSlot?.startTime || selectedDate}
       />
     </div>
   );
