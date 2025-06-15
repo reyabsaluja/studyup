@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,7 +38,7 @@ interface PlannerEventSidebarProps {
   onUpdateAssignment: (data: { id: string; updates: any }) => void;
   onCompleteAssignment: (assignment: Assignment) => void;
   onDeleteAssignment: (assignmentId: string) => void;
-  onUpdateStudySession: (data: { id: string, completed: boolean }) => void;
+  onCompleteStudySession: (session: StudySession) => void;
   onDeleteStudySession: (sessionId: string) => void;
   isUpdating: boolean;
   isDeleting: boolean;
@@ -58,7 +57,7 @@ const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
   onUpdateAssignment,
   onCompleteAssignment,
   onDeleteAssignment,
-  onUpdateStudySession,
+  onCompleteStudySession,
   onDeleteStudySession,
   isUpdating,
   isDeleting,
@@ -139,7 +138,7 @@ const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
                     className="w-full"
                 >
                     <Check className="mr-2 h-4 w-4" />
-                    {isTogglingCompletion ? 'Updating...' : (event.completed ? 'Mark as Incomplete' : 'Mark as Complete')}
+                    {event.completed ? 'Mark as Incomplete' : 'Mark as Complete'}
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
@@ -204,7 +203,7 @@ const PlannerEventSidebar: React.FC<PlannerEventSidebarProps> = ({
             </CardContent>
             <CardFooter className="flex flex-col gap-2 pt-4 border-t">
                  <Button
-                    onClick={() => onUpdateStudySession({ id: event.id, completed: !event.completed })}
+                    onClick={() => onCompleteStudySession(event as StudySession)}
                     variant={event.completed ? 'secondary' : 'default'}
                     className="w-full"
                 >

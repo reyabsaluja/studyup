@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -125,11 +124,19 @@ const Planner = () => {
   };
 
   const handleCompleteAssignment = (assignment: any) => {
+    // Optimistically update the selected event in the sidebar
+    setSelectedEvent(prev => (prev && prev.id === assignment.id ? { ...prev, completed: !assignment.completed } : prev));
     toggleAssignmentCompletion(assignment);
   };
 
   const handleUpdateAssignment = (data: { id: string; updates: any }) => {
     updateAssignment(data);
+  };
+
+  const handleCompleteStudySession = (session: any) => {
+    // Optimistically update the selected event in the sidebar
+    setSelectedEvent(prev => (prev && prev.id === session.id ? { ...prev, completed: !session.completed } : prev));
+    updateStudySession({ id: session.id, completed: !session.completed });
   };
 
   const handlePreviousWeek = () => {
@@ -227,7 +234,7 @@ const Planner = () => {
             onUpdateAssignment={handleUpdateAssignment}
             onCompleteAssignment={handleCompleteAssignment}
             onDeleteAssignment={handleDeleteAssignment}
-            onUpdateStudySession={updateStudySession}
+            onCompleteStudySession={handleCompleteStudySession}
             onDeleteStudySession={handleDeleteStudySession}
             isUpdating={isUpdating}
             isDeleting={isDeleting}
