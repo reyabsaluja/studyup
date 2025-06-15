@@ -80,7 +80,7 @@ const Dashboard = () => {
           </div>
 
           {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div id="dashboard-stats-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {statsData.map((stat) => {
               const Icon = stat.icon;
               return (
@@ -102,7 +102,7 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
             {/* Quick Actions */}
-            <Card>
+            <Card id="dashboard-quick-actions">
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
@@ -143,7 +143,7 @@ const Dashboard = () => {
             </Card>
 
             {/* Recent Activity */}
-            <Card>
+            <Card id="dashboard-recent-activity">
               <CardHeader>
                 <CardTitle>Recent Activity</CardTitle>
               </CardHeader>
@@ -175,7 +175,7 @@ const Dashboard = () => {
           </div>
 
           {/* AI Features */}
-          <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
+          <Card id="ai-features-promo" className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>

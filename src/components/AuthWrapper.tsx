@@ -3,6 +3,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { User, Session } from "@supabase/supabase-js";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTutorial } from "@/contexts/TutorialContext";
+import HelpButton from "./HelpButton";
+import InteractiveTutorial from "./InteractiveTutorial";
+import { dashboardTutorialSteps } from "@/config/tutorialSteps";
 
 interface AuthWrapperProps {
   children: React.ReactNode;
@@ -14,6 +18,7 @@ const AuthWrapper = ({ children }: AuthWrapperProps) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const location = useLocation();
+  const { startTutorial, hasSeenTutorial } = useTutorial();
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -46,6 +51,13 @@ const AuthWrapper = ({ children }: AuthWrapperProps) => {
     }
   }, [user, loading, navigate, location.pathname]);
 
+  useEffect(() => {
+    if (user && !loading && !hasSeenTutorial && location.pathname === '/dashboard') {
+      setTimeout(() => startTutorial(dashboardTutorialSteps), 500);
+    }
+  }, [user, loading, hasSeenTutorial, location.pathname, startTutorial]);
+
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -57,7 +69,15 @@ const AuthWrapper = ({ children }: AuthWrapperProps) => {
     );
   }
 
-  return <>{children}</>;
+  const showHelpButton = user && !["/auth", "/"].includes(location.pathname);
+
+  return (
+    <>
+      {children}
+      {showHelpButton && <HelpButton />}
+      <InteractiveTutorial />
+    </>
+  );
 };
 
 export default AuthWrapper;
