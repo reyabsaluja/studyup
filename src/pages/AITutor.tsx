@@ -10,6 +10,7 @@ import UserMenu from '@/components/UserMenu';
 import { useGeminiChat } from '@/hooks/useGeminiChat';
 import ReactMarkdown from 'react-markdown';
 import { useCourseMaterials } from '@/hooks/useCourseMaterials';
+import { useAssignmentMaterials } from '@/hooks/useAssignmentMaterials';
 import { useAllAssignments } from '@/hooks/useAssignments';
 import SaveChatDialog from '@/components/SaveChatDialog';
 
@@ -32,16 +33,22 @@ const AITutor = () => {
   const [showSaveDialog, setShowSaveDialog] = useState(false);
   const { assignments } = useAllAssignments();
 
+  const locationState = location.state as {
+    courseId?: string;
+    courseName?: string;
+    assignmentId?: string;
+    assignmentDetails?: { title: string; description: string };
+    chatToLoad?: any;
+  } | null;
+
   // For highlighting the latest assistant message
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const prevMessagesLength = useRef(messages.length);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Get course context from navigation state
-  const courseContext = location.state as { courseId?: string; courseName?: string; context?: string } | null;
-  
-  // Fetch course materials if a courseId is present
-  const { materials } = useCourseMaterials(courseContext?.courseId ?? '');
+  // Fetch materials for both course and assignment contexts
+  const { materials: courseMaterials } = useCourseMaterials(locationState?.courseId ?? '');
+  const { materials: assignmentMaterials } = useAssignmentMaterials(locationState?.assignmentId);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -72,15 +79,19 @@ const AITutor = () => {
   }, [messages]);
 
   useEffect(() => {
-    // If we have course context and no messages yet, send a greeting
-    if (courseContext && messages.length === 0) {
-      const greeting = `Hello! I'm here to help you with ${courseContext.courseName}. What would you like to know or work on?`;
+    // If we have course context and no messages yet, log a greeting
+    if (locationState?.courseName && messages.length === 0) {
+      const greeting = `Hello! I'm here to help you with ${locationState.courseName}. What would you like to know or work on?`;
       // We don't automatically send this as a message, just show it as context
     }
-  }, [courseContext, messages.length]);
+  }, [locationState, messages.length]);
 
   const handleSaveChat = (data: { title: string; assignment_id?: string }) => {
-    saveChat(data);
+    const finalData = { ...data };
+    if (locationState?.assignmentId) {
+      finalData.assignment_id = locationState.assignmentId;
+    }
+    saveChat(finalData);
   };
 
   const handleSendMessage = async () => {
@@ -89,20 +100,37 @@ const AITutor = () => {
     let context = "You are an AI tutor helping students with their academic questions. Be helpful, encouraging, and provide clear explanations.";
 
     // Add course-specific context if available
-    if (courseContext) {
-      context += ` The student is currently working on ${courseContext.courseName}. Tailor your responses to be relevant to this course when appropriate.`;
+    if (locationState?.courseName) {
+      context += ` The student is currently working on the course: "${locationState.courseName}". Tailor your responses to be relevant to this course when appropriate.`;
+    }
+
+    // Add assignment-specific context
+    if (locationState?.assignmentDetails) {
+        context += `\n\nThe student is specifically focused on the assignment: "${locationState.assignmentDetails.title}".`;
+        if (locationState.assignmentDetails.description) {
+            context += `\nAssignment Description: ${locationState.assignmentDetails.description}`;
+        }
     }
 
     // Add course materials to the context
-    if (materials && materials.length > 0) {
-      const materialInfo = materials.map(m => {
+    if (courseMaterials && courseMaterials.length > 0) {
+      const materialInfo = courseMaterials.map(m => {
         if (m.content) {
           return `Material Title: "${m.title}"\nType: ${m.type}\nContent:\n${m.content}`;
         }
         return `Material Title: "${m.title}"\nType: ${m.type}\n(Content not available for this file type)`;
       }).join('\n\n---\n\n');
       
-      context += `\n\nHere are some course materials for reference. Use their content to answer questions when relevant. For some files, only the title and type are available.\n\n${materialInfo}`;
+      context += `\n\nHere are some general COURSE materials for reference. Use their content to answer questions when relevant.\n\n${materialInfo}`;
+    }
+
+    // Add assignment materials to the context
+    if (assignmentMaterials && assignmentMaterials.length > 0) {
+        const materialInfo = assignmentMaterials.map(m => {
+            return `Assignment Material Title: "${m.title}"\nType: ${m.type}\n(Content not available, use title for reference)`;
+        }).join('\n\n---\n\n');
+
+        context += `\n\nHere are some ASSIGNMENT-SPECIFIC materials. These are highly relevant to the student's current task.\n\n${materialInfo}`;
     }
 
     await sendMessage(inputMessage, context);
@@ -115,6 +143,10 @@ const AITutor = () => {
       handleSendMessage();
     }
   };
+
+  const hasCourseMats = courseMaterials && courseMaterials.length > 0;
+  const hasAssignmentContext = locationState?.assignmentDetails;
+  const hasAssignmentMats = assignmentMaterials && assignmentMaterials.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -133,8 +165,8 @@ const AITutor = () => {
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">StudyUp</h1>
                 <span className="text-sm text-gray-500">AI Tutor</span>
-                {courseContext && (
-                  <p className="text-sm text-gray-500">Currently helping with: {courseContext.courseName}</p>
+                {locationState?.courseName && (
+                  <p className="text-sm text-gray-500">Currently helping with: {locationState.courseName}</p>
                 )}
               </div>
             </div>
@@ -158,31 +190,41 @@ const AITutor = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-2">AI-Powered Learning Assistant</h2>
               <p className="text-gray-600">
                 Ask questions about your studies and get intelligent, personalized help.
-                {courseContext && ` Currently focused on ${courseContext.courseName}.`}
+                {locationState?.courseName && ` Currently focused on ${locationState.courseName}.`}
+                {locationState?.assignmentDetails && ` Specifically, the assignment "${locationState.assignmentDetails.title}".`}
               </p>
             </div>
 
             <Card className="h-[600px] flex flex-col">
               <CardHeader>
-                <CardTitle className="flex items-center">
+                <CardTitle className="flex items-center flex-wrap">
                   <Brain className="h-5 w-5 mr-2" />
                   Chat with AI Tutor (Powered by Gemini 2.0 Flash)
-                  {courseContext && (
+                  {locationState?.courseName && (
                     <span className="ml-2 text-sm font-normal text-gray-500">
-                      - {courseContext.courseName}
+                      - {locationState.courseName}
+                      {locationState?.assignmentDetails && ` / ${locationState.assignmentDetails.title}`}
                     </span>
                   )}
                 </CardTitle>
               </CardHeader>
 
               <CardContent className="flex-1 flex flex-col overflow-hidden">
-                {/* Course material context indicator */}
-                {materials && materials.length > 0 && (
-                  <div className="mb-4 p-3 rounded-md bg-blue-50 border border-blue-200 text-sm text-blue-800 flex items-center space-x-2">
-                    <FileText className="h-5 w-5 flex-shrink-0" />
-                    <span>
-                      This chat has context from {materials.length} course material(s). The AI will use this to better answer your questions.
-                    </span>
+                {/* Context indicators */}
+                {(hasCourseMats || hasAssignmentContext || hasAssignmentMats) && (
+                  <div className="mb-4 p-3 rounded-md bg-blue-50 border border-blue-200 text-sm text-blue-800">
+                    <div className="flex items-start space-x-2">
+                      <FileText className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <span className="font-semibold">This chat has extra context:</span>
+                        <ul className="list-disc list-inside mt-1">
+                          {hasAssignmentContext && <li>Assignment: "{locationState.assignmentDetails.title}"</li>}
+                          {hasCourseMats && <li>{courseMaterials.length} course material(s)</li>}
+                          {hasAssignmentMats && <li>{assignmentMaterials.length} assignment material(s)</li>}
+                        </ul>
+                        <p className="mt-1">The AI will use this information to better answer your questions.</p>
+                      </div>
+                    </div>
                   </div>
                 )}
                 
@@ -193,10 +235,11 @@ const AITutor = () => {
                       <div className="text-center text-gray-500 py-8">
                         <Brain className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                         <p>
-                          {courseContext
-                            ? `Ready to help you with ${courseContext.courseName}!`
+                          {locationState?.courseName
+                            ? `Ready to help you with ${locationState.courseName}!`
                             : "Start a conversation with your AI tutor!"
                           }
+                          {locationState?.assignmentDetails && ` We can focus on your assignment: "${locationState.assignmentDetails.title}".`}
                         </p>
                         <p className="text-sm mt-2">Ask questions about any subject, request explanations, or get study tips.</p>
                       </div>
@@ -292,8 +335,10 @@ const AITutor = () => {
                     onChange={(e) => setInputMessage(e.target.value)}
                     onKeyPress={handleKeyPress}
                     placeholder={
-                      courseContext
-                        ? `Ask about ${courseContext.courseName}...`
+                      locationState?.assignmentDetails
+                        ? `Ask about "${locationState.assignmentDetails.title}"...`
+                        : locationState?.courseName
+                        ? `Ask about ${locationState.courseName}...`
                         : "Ask your AI tutor anything..."
                     }
                     disabled={isLoading}

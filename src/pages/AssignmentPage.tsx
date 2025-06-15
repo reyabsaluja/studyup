@@ -57,8 +57,13 @@ const AssignmentPage = () => {
     if (!assignment) return;
     navigate('/ai-tutor', {
       state: {
+        courseId: courseId,
+        courseName: assignment.courses?.name,
         assignmentId: assignment.id,
-        context: `I'm working on the assignment "${assignment.title}" for the course "${assignment.courses?.name}". The assignment description is: ${assignment.description || ''}`
+        assignmentDetails: {
+          title: assignment.title,
+          description: assignment.description || 'No description provided.',
+        },
       }
     });
   };
@@ -291,7 +296,6 @@ const AssignmentPage = () => {
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>
-
                     </li>
                   ))}
                 </ul>
