@@ -398,39 +398,7 @@ const Planner = () => {
                 </CardContent>
               </Card>
 
-              {/* Study Statistics */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <BookOpen className="h-5 w-5 mr-2" />
-                    Study Stats
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Total Sessions</span>
-                      <span className="font-medium">{studySessions.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Completed</span>
-                      <span className="font-medium text-green-600">
-                        {studySessions.filter(s => s.completed).length}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Active Courses</span>
-                      <span className="font-medium">{courses.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Pending Assignments</span>
-                      <span className="font-medium text-orange-600">
-                        {assignments.filter(a => !a.completed && a.due_date && new Date(a.due_date) > new Date()).length}
-                      </span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Study Statistics - REMOVED */}
             </div>
           </div>
         </div>
