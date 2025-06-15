@@ -29,11 +29,11 @@ const LandingPage = () => {
       </header>
 
       <main className="flex-grow flex flex-col items-center text-center px-4 pt-16 md:pt-24 z-10">
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 py-2">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-semibold tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70 py-2">
           Unlock Your Academic Potential
         </h1>
-        <p className="mt-4 text-base md:text-lg text-muted-foreground max-w-xl lg:max-w-2xl mx-auto">
-          StudyUp is the all-in-one academic planner and AI tutor designed to help you succeed. Organize your schedule, manage assignments, and get instant help.
+        <p className="mt-4 text-sm md:text-base text-muted-foreground max-w-xl lg:max-w-2xl mx-auto">
+          StudyUp is the all-in-one academic planner and AI tutor. Organize your schedule, manage assignments, and get instant help.
         </p>
         <div className="mt-8">
           <Button size="lg" onClick={() => navigate('/auth')} className="bg-primary hover:bg-primary/90 text-primary-foreground">
