@@ -13,6 +13,7 @@ import CustomCalendar from '@/components/CustomCalendar';
 import { useStudySessions } from '@/hooks/useStudySessions';
 import { useCourses } from '@/hooks/useCourses';
 import { useAllAssignments } from '@/hooks/useAssignments';
+import EditAssignmentDialog from '@/components/EditAssignmentDialog';
 
 const Planner = () => {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -20,7 +21,15 @@ const Planner = () => {
   const [showAddAssignmentDialog, setShowAddAssignmentDialog] = useState(false);
   const { studySessions, isLoading, updateStudySession, deleteStudySession } = useStudySessions();
   const { courses } = useCourses();
-  const { assignments, deleteAssignment } = useAllAssignments();
+  const {
+    assignments,
+    deleteAssignment,
+    isDeleting,
+    updateAssignment,
+    isUpdating,
+    toggleAssignmentCompletion,
+    isTogglingCompletion,
+  } = useAllAssignments();
 
   const getSessionsForDate = (date: Date) => {
     return studySessions.filter(session => {
@@ -108,6 +117,14 @@ const Planner = () => {
 
   const handleDeleteAssignment = (assignmentId: string) => {
     deleteAssignment(assignmentId);
+  };
+
+  const handleCompleteAssignment = (assignment: any) => {
+    toggleAssignmentCompletion(assignment);
+  };
+
+  const handleUpdateAssignment = (data: { id: string; updates: any }) => {
+    updateAssignment(data);
   };
 
   const selectedDateSessions = getSessionsForDate(selectedDate);
@@ -243,14 +260,38 @@ const Planner = () => {
                                 <div className="flex justify-between items-start">
                                   <div className="flex-1 pr-4">
                                     <p className="font-medium">{assignment.title}</p>
-                                    <p className="text-sm text-gray-600">{course?.name || 'Unknown Course'}</p>
+                                    <p className="text-sm text-gray-600">{(assignment as any).courses?.name || course?.name || 'Unknown Course'}</p>
                                     {assignment.description && (
                                       <p className="text-sm text-gray-500 mt-1 break-words">{assignment.description}</p>
                                     )}
                                   </div>
-                                  <Badge variant={badgeVariant} className="flex-shrink-0">
-                                    {badgeText}
-                                  </Badge>
+                                  <div className="flex items-center space-x-2 flex-shrink-0">
+                                    <Badge variant={badgeVariant}>
+                                      {badgeText}
+                                    </Badge>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleCompleteAssignment(assignment)}
+                                      disabled={isTogglingCompletion}
+                                      title={assignment.completed ? "Mark as not completed" : "Mark as completed"}
+                                    >
+                                      <Check className={`h-4 w-4 ${assignment.completed ? 'text-green-600' : ''}`} />
+                                    </Button>
+                                    <EditAssignmentDialog
+                                      assignment={assignment}
+                                      onUpdateAssignment={handleUpdateAssignment}
+                                      isUpdating={isUpdating}
+                                    />
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleDeleteAssignment(assignment.id)}
+                                      disabled={isDeleting}
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             );

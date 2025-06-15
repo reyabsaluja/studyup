@@ -6,6 +6,7 @@ import type { Database } from '@/integrations/supabase/types';
 type Assignment = Database['public']['Tables']['assignments']['Row'];
 type AssignmentInsert = Database['public']['Tables']['assignments']['Insert'];
 type AssignmentUpdate = Database['public']['Tables']['assignments']['Update'];
+type AssignmentWithCourse = Assignment & { courses: { name: string, color: string, code: string } };
 
 export const useAssignments = (courseId: string) => {
   const queryClient = useQueryClient();
@@ -230,7 +231,7 @@ export const useAllAssignments = () => {
 
   const { data: assignments = [], isLoading, error } = useQuery({
     queryKey: ['assignments', 'all'],
-    queryFn: async (): Promise<Assignment[]> => {
+    queryFn: async (): Promise<AssignmentWithCourse[]> => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
@@ -243,7 +244,7 @@ export const useAllAssignments = () => {
         .order('due_date', { ascending: true });
 
       if (error) throw error;
-      return data || [];
+      return (data as AssignmentWithCourse[]) || [];
     },
   });
 
@@ -294,6 +295,54 @@ export const useAllAssignments = () => {
     },
   });
 
+  const updateAssignmentMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: AssignmentUpdate }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Get assignment details before update for activity tracking
+      const { data: originalAssignment, error: fetchError } = await supabase
+        .from('assignments')
+        .select('*, courses(name)')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { data, error } = await supabase
+        .from('assignments')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Track activity
+      await supabase
+        .from('activities')
+        .insert({
+          user_id: user.id,
+          activity_type: 'assignment_updated',
+          activity_description: `Updated assignment: ${updates.title || originalAssignment.title}`,
+          related_course_id: originalAssignment.course_id,
+          related_course_name: originalAssignment.courses?.name || 'Unknown Course',
+        });
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
+      toast.success('Assignment updated successfully!');
+    },
+    onError: (error) => {
+      console.error('Error updating assignment:', error);
+      toast.error('Failed to update assignment');
+    },
+  });
+  
   const deleteAssignmentMutation = useMutation({
     mutationFn: async (assignmentId: string) => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -340,13 +389,55 @@ export const useAllAssignments = () => {
     },
   });
 
+  const toggleAssignmentCompletionMutation = useMutation({
+    mutationFn: async (assignment: AssignmentWithCourse) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data, error } = await supabase
+        .from('assignments')
+        .update({ completed: !assignment.completed })
+        .eq('id', assignment.id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Track activity
+      await supabase
+        .from('activities')
+        .insert({
+          user_id: user.id,
+          activity_type: assignment.completed ? 'assignment_uncompleted' : 'assignment_completed',
+          activity_description: `${assignment.completed ? 'Uncompleted' : 'Completed'} assignment: ${assignment.title}`,
+          related_course_id: assignment.course_id,
+          related_course_name: assignment.courses?.name || 'Unknown Course',
+        });
+
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
+    },
+    onError: (error) => {
+      console.error('Error updating assignment completion:', error);
+      toast.error('Failed to update assignment');
+    },
+  });
+
   return {
     assignments,
     isLoading,
     error,
     createAssignment: createAssignmentMutation.mutate,
     isCreating: createAssignmentMutation.isPending,
+    updateAssignment: updateAssignmentMutation.mutate,
+    isUpdating: updateAssignmentMutation.isPending,
     deleteAssignment: deleteAssignmentMutation.mutate,
     isDeleting: deleteAssignmentMutation.isPending,
+    toggleAssignmentCompletion: toggleAssignmentCompletionMutation.mutate,
+    isTogglingCompletion: toggleAssignmentCompletionMutation.isPending,
   };
 };
