@@ -1,9 +1,8 @@
-import React, { useState, useRef, useCallback } from 'react';
+
+import React, { useState, useRef } from 'react';
 import { format, startOfWeek, addDays, addHours, startOfDay, isToday, isSameDay } from 'date-fns';
-import { Card, CardContent } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Badge } from '@/components/ui/badge';
-import { Clock, BookOpen, Target } from 'lucide-react';
+import { BookOpen, Target } from 'lucide-react';
 
 interface TimeGridCalendarProps {
   selectedDate: Date;
@@ -152,6 +151,10 @@ const TimeGridCalendar = ({
     }
   };
 
+  const handleEventMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   // Cleanup timeout on unmount
   React.useEffect(() => {
     return () => {
@@ -203,7 +206,7 @@ const TimeGridCalendar = ({
                   return (
                     <div
                       key={`${dayIndex}-${timeSlot.hour}`}
-                      className={`p-1 border-r last:border-r-0 min-h-[40px] cursor-pointer transition-colors select-none ${
+                      className={`p-1 border-r last:border-r-0 min-h-[60px] cursor-pointer transition-colors select-none flex flex-col ${
                         isSelected ? 'bg-blue-200' : 'hover:bg-gray-100'
                       }`}
                       onMouseDown={(e) => handleMouseDown(dayIndex, timeSlot.hour, e)}
@@ -221,6 +224,7 @@ const TimeGridCalendar = ({
                                 : 'bg-green-100 text-green-800 border-l-2 border-green-400'
                             }`}
                             onClick={(e) => handleEventClick(event, event.type, e)}
+                            onMouseDown={handleEventMouseDown}
                           >
                             <div className="flex items-center gap-1">
                               {event.type === 'study' ? (
@@ -249,3 +253,4 @@ const TimeGridCalendar = ({
 };
 
 export default TimeGridCalendar;
+
