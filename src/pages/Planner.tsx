@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +20,7 @@ const Planner = () => {
   const [showAddAssignmentDialog, setShowAddAssignmentDialog] = useState(false);
   const { studySessions, isLoading, updateStudySession, deleteStudySession } = useStudySessions();
   const { courses } = useCourses();
-  const { assignments } = useAllAssignments();
+  const { assignments, deleteAssignment } = useAllAssignments();
 
   const getSessionsForDate = (date: Date) => {
     return studySessions.filter(session => {
@@ -105,6 +104,10 @@ const Planner = () => {
 
   const handleAddAssignment = () => {
     setShowAddAssignmentDialog(true);
+  };
+
+  const handleDeleteAssignment = (assignmentId: string) => {
+    deleteAssignment(assignmentId);
   };
 
   const selectedDateSessions = getSessionsForDate(selectedDate);

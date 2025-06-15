@@ -294,11 +294,59 @@ export const useAllAssignments = () => {
     },
   });
 
+  const deleteAssignmentMutation = useMutation({
+    mutationFn: async (assignmentId: string) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Get assignment details before deletion for activity tracking
+      const { data: assignment, error: fetchError } = await supabase
+        .from('assignments')
+        .select('*, courses(name)')
+        .eq('id', assignmentId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      const { error } = await supabase
+        .from('assignments')
+        .delete()
+        .eq('id', assignmentId);
+
+      if (error) throw error;
+
+      // Track activity
+      await supabase
+        .from('activities')
+        .insert({
+          user_id: user.id,
+          activity_type: 'assignment_deleted',
+          activity_description: `Deleted assignment: ${assignment.title}`,
+          related_course_id: assignment.course_id,
+          related_course_name: assignment.courses?.name || 'Unknown Course',
+        });
+
+      return assignmentId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['assignments'] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['activities'] });
+      toast.success('Assignment deleted successfully!');
+    },
+    onError: (error) => {
+      console.error('Error deleting assignment:', error);
+      toast.error('Failed to delete assignment');
+    },
+  });
+
   return {
     assignments,
     isLoading,
     error,
     createAssignment: createAssignmentMutation.mutate,
     isCreating: createAssignmentMutation.isPending,
+    deleteAssignment: deleteAssignmentMutation.mutate,
+    isDeleting: deleteAssignmentMutation.isPending,
   };
 };
