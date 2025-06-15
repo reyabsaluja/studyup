@@ -1,10 +1,9 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Plus, Clock, BookOpen, Target, Trash2, Edit, Check } from 'lucide-react';
-import { format, isToday, isTomorrow, isSameDay, isPast } from 'date-fns';
+import { Plus, Clock, BookOpen, Target, Trash2, Edit, Check, ChevronLeft, ChevronRight } from 'lucide-react';
+import { format, isToday, isTomorrow, isSameDay, isPast, addWeeks, subWeeks } from 'date-fns';
 import Navigation from '@/components/Navigation';
 import UserMenu from '@/components/UserMenu';
 import AddStudySessionDialog from '@/components/AddStudySessionDialog';
@@ -97,6 +96,14 @@ const Planner = () => {
     updateAssignment(data);
   };
 
+  const handlePreviousWeek = () => {
+    setSelectedDate(subWeeks(selectedDate, 1));
+  };
+
+  const handleNextWeek = () => {
+    setSelectedDate(addWeeks(selectedDate, 1));
+  };
+
   const selectedDateSessions = getSessionsForDate(selectedDate);
   const selectedDateAssignments = getAssignmentsForDate(selectedDate);
 
@@ -114,7 +121,27 @@ const Planner = () => {
         <div className="p-6 h-[calc(100vh-80px)]">
           <Card className="h-full">
             <CardHeader>
-              <CardTitle>Weekly Calendar</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle>{format(selectedDate, 'MMMM yyyy')}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handlePreviousWeek}
+                    className="h-8 w-8"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleNextWeek}
+                    className="h-8 w-8"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             </CardHeader>
             <CardContent className="h-full p-0 relative">
               <div className="h-full" data-calendar-grid>
