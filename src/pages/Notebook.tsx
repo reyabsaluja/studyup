@@ -1,61 +1,105 @@
+
+import { useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Brain, Search, Plus, FileText, Image, Mic, Tag, Filter } from "lucide-react";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { 
+  BookOpen, 
+  Plus, 
+  Search, 
+  Tag, 
+  Calendar,
+  Loader2,
+  Brain,
+  Trash2,
+  Edit
+} from "lucide-react";
 import Navigation from "@/components/Navigation";
 import UserMenu from "@/components/UserMenu";
+import { useNotes } from "@/hooks/useNotes";
+import { useCourses } from "@/hooks/useCourses";
+import CreateNoteDialog from "@/components/CreateNoteDialog";
+import EditNoteDialog from "@/components/EditNoteDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Notebook = () => {
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
+  const [editingNote, setEditingNote] = useState<any>(null);
 
-  const notes = [
-    {
-      id: 1,
-      title: "Quantum Mechanics - Wave Functions",
-      content: "Wave functions are mathematical descriptions of the quantum state of isolated quantum systems...",
-      course: "Advanced Physics",
-      tags: ["quantum", "physics", "wave-functions"],
-      date: "2 hours ago",
-      type: "text",
-      aiSummary: "Key concepts about wave functions and their role in quantum mechanics"
-    },
-    {
-      id: 2, 
-      title: "Calculus Integration Techniques",
-      content: "Integration by parts, substitution method, and partial fractions...",
-      course: "Calculus III",
-      tags: ["calculus", "integration", "math"],
-      date: "Yesterday",
-      type: "image",
-      aiSummary: "Various integration methods with step-by-step examples"
-    },
-    {
-      id: 3,
-      title: "World War II Lecture Notes",
-      content: "Causes of WWII, major battles, key figures and outcomes...",
-      course: "Modern History", 
-      tags: ["history", "wwii", "lectures"],
-      date: "3 days ago",
-      type: "audio",
-      aiSummary: "Comprehensive overview of WWII causes, events, and consequences"
-    }
-  ];
+  const { 
+    notes, 
+    isLoading, 
+    deleteNote, 
+    generateSummary,
+    isDeleting,
+    isGeneratingSummary 
+  } = useNotes();
+  
+  const { courses } = useCourses();
 
-  const getTypeIcon = (type: string) => {
-    switch (type) {
-      case 'image': return <Image className="h-4 w-4" />;
-      case 'audio': return <Mic className="h-4 w-4" />;
-      default: return <FileText className="h-4 w-4" />;
-    }
+  // Get all unique tags from notes
+  const allTags = Array.from(
+    new Set(notes.flatMap(note => note.tags || []))
+  );
+
+  // Filter notes based on search, tag, and course
+  const filteredNotes = notes.filter(note => {
+    const matchesSearch = note.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (note.content?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
+    
+    const matchesTag = !selectedTag || (note.tags && note.tags.includes(selectedTag));
+    
+    const matchesCourse = !selectedCourseId || note.course_id === selectedCourseId;
+    
+    return matchesSearch && matchesTag && matchesCourse;
+  });
+
+  const getPreviewText = (content: string | null) => {
+    if (!content) return "No content...";
+    return content.length > 120 ? content.substring(0, 120) + "..." : content;
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'image': return 'text-blue-600 bg-blue-50';
-      case 'audio': return 'text-green-600 bg-green-50';
-      default: return 'text-gray-600 bg-gray-50';
-    }
+  const getCourseNameById = (courseId: string | null) => {
+    if (!courseId) return null;
+    const course = courses.find(c => c.id === courseId);
+    return course?.name;
   };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex">
+        <Navigation />
+        <main className="flex-1 flex items-center justify-center">
+          <div className="flex items-center space-x-2">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span>Loading notes...</span>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -65,167 +109,200 @@ const Notebook = () => {
         {/* Header */}
         <header className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
-            <h1 className="text-xl font-semibold text-gray-900">Notebook</h1>
+            <h1 className="text-xl font-semibold text-gray-900">Knowledge Notebook</h1>
             <div className="flex items-center space-x-4">
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                New Note
-              </Button>
+              <CreateNoteDialog courses={courses} />
               <UserMenu />
             </div>
           </div>
         </header>
 
         <div className="p-6">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Knowledge Notebook</h2>
-            <p className="text-gray-600">AI-enhanced note-taking with multimodal support and smart organization.</p>
-          </div>
-
-          {/* Search and Filter Bar */}
-          <div className="mb-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+          {/* Search and Filters */}
+          <div className="mb-6 space-y-4">
+            <div className="flex items-center space-x-4">
               <div className="relative flex-1">
-                <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <input
-                  type="text"
-                  placeholder="Search notes, tags, or content..."
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Input
+                  placeholder="Search notes..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
                 />
               </div>
-              <Button variant="outline">
-                <Filter className="h-4 w-4 mr-2" />
-                Filter
-              </Button>
+              <select
+                value={selectedCourseId || ""}
+                onChange={(e) => setSelectedCourseId(e.target.value || null)}
+                className="px-3 py-2 border border-gray-300 rounded-md bg-white"
+              >
+                <option value="">All courses</option>
+                {courses.map(course => (
+                  <option key={course.id} value={course.id}>
+                    {course.name}
+                  </option>
+                ))}
+              </select>
             </div>
-          </div>
 
-          {/* AI Quick Actions */}
-          <Card className="mb-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">AI Note Assistant</h3>
-                  <p className="text-gray-600 mb-4">Upload content or ask questions about your notes</p>
-                  <div className="flex space-x-3">
-                    <Button size="sm" className="bg-purple-600 hover:bg-purple-700">
-                      <Image className="h-4 w-4 mr-2" />
-                      Upload Image
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Mic className="h-4 w-4 mr-2" />
-                      Voice Note
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      <Brain className="h-4 w-4 mr-2" />
-                      Ask AI
-                    </Button>
-                  </div>
+            {/* Tags Filter */}
+            {allTags.length > 0 && (
+              <div className="flex items-center space-x-2">
+                <Tag className="h-4 w-4 text-gray-500" />
+                <div className="flex flex-wrap gap-2">
+                  <Badge
+                    variant={selectedTag === null ? "default" : "outline"}
+                    className="cursor-pointer"
+                    onClick={() => setSelectedTag(null)}
+                  >
+                    All tags
+                  </Badge>
+                  {allTags.map(tag => (
+                    <Badge
+                      key={tag}
+                      variant={selectedTag === tag ? "default" : "outline"}
+                      className="cursor-pointer"
+                      onClick={() => setSelectedTag(tag)}
+                    >
+                      {tag}
+                    </Badge>
+                  ))}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
 
           {/* Notes Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {notes.map((note) => (
-              <Card key={note.id} className="hover:shadow-lg transition-shadow cursor-pointer">
-                <CardHeader className="pb-4">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <div className={`p-1 rounded ${getTypeColor(note.type)}`}>
-                          {getTypeIcon(note.type)}
-                        </div>
-                        <span className="text-xs text-gray-500">{note.course}</span>
-                      </div>
-                      <CardTitle className="text-lg font-semibold line-clamp-2">{note.title}</CardTitle>
-                      <p className="text-sm text-gray-500 mt-1">{note.date}</p>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent>
-                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">{note.content}</p>
-                  
-                  {/* AI Summary */}
-                  <div className="bg-blue-50 p-3 rounded-lg mb-4">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Brain className="h-4 w-4 text-blue-600" />
-                      <span className="text-xs font-medium text-blue-600">AI Summary</span>
-                    </div>
-                    <p className="text-sm text-gray-700">{note.aiSummary}</p>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {note.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="inline-flex items-center px-2 py-1 rounded-full text-xs bg-gray-100 text-gray-700"
-                      >
-                        <Tag className="h-3 w-3 mr-1" />
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex space-x-2">
-                    <Button size="sm" variant="outline" className="flex-1">
-                      Edit
-                    </Button>
-                    <Button size="sm" className="flex-1">
-                      <Brain className="h-4 w-4 mr-1" />
-                      Quiz Me
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Create New Note Options */}
-          <div className="mt-8">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Create New Note</h3>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                  <h4 className="font-medium text-gray-900">Text Note</h4>
-                  <p className="text-sm text-gray-500 mt-1">Create a new text-based note</p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <Image className="h-12 w-12 text-blue-400 mx-auto mb-3" />
-                  <h4 className="font-medium text-gray-900">Image Note</h4>
-                  <p className="text-sm text-gray-500 mt-1">Upload and analyze images</p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <Mic className="h-12 w-12 text-green-400 mx-auto mb-3" />
-                  <h4 className="font-medium text-gray-900">Voice Note</h4>
-                  <p className="text-sm text-gray-500 mt-1">Record and transcribe audio</p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                <CardContent className="p-6 text-center">
-                  <Brain className="h-12 w-12 text-purple-400 mx-auto mb-3" />
-                  <h4 className="font-medium text-gray-900">AI Generate</h4>
-                  <p className="text-sm text-gray-500 mt-1">Let AI create notes from prompts</p>
-                </CardContent>
-              </Card>
+          {filteredNotes.length === 0 ? (
+            <div className="text-center py-12">
+              <BookOpen className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                {notes.length === 0 ? "No notes yet" : "No notes match your filters"}
+              </h3>
+              <p className="text-gray-500 mb-6">
+                {notes.length === 0 
+                  ? "Create your first note to get started with your knowledge notebook."
+                  : "Try adjusting your search terms or filters."
+                }
+              </p>
+              {notes.length === 0 && <CreateNoteDialog courses={courses} />}
             </div>
-          </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredNotes.map((note) => (
+                <Card key={note.id} className="hover:shadow-lg transition-shadow">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg font-semibold line-clamp-2">
+                          {note.title}
+                        </CardTitle>
+                        {note.course_id && (
+                          <p className="text-sm text-blue-600 mt-1">
+                            {getCourseNameById(note.course_id)}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center space-x-1 ml-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setEditingNote(note)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-500 hover:text-red-700"
+                              disabled={isDeleting}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Note</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{note.title}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteNote(note.id)}
+                                className="bg-red-600 hover:bg-red-700"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="space-y-3">
+                    {/* Note Preview */}
+                    <p className="text-gray-600 text-sm line-clamp-3">
+                      {getPreviewText(note.content)}
+                    </p>
+
+                    {/* AI Summary */}
+                    {note.summary ? (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-center mb-2">
+                          <Brain className="h-4 w-4 text-blue-600 mr-2" />
+                          <span className="text-sm font-medium text-blue-800">AI Summary</span>
+                        </div>
+                        <p className="text-sm text-blue-700">{note.summary}</p>
+                      </div>
+                    ) : (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => generateSummary(note.id)}
+                        disabled={isGeneratingSummary}
+                        className="w-full"
+                      >
+                        <Brain className="h-4 w-4 mr-2" />
+                        {isGeneratingSummary ? "Generating..." : "Generate AI Summary"}
+                      </Button>
+                    )}
+
+                    {/* Tags */}
+                    {note.tags && note.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {note.tags.map(tag => (
+                          <Badge key={tag} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Date */}
+                    <div className="flex items-center text-xs text-gray-500 pt-2">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      Updated {formatDate(note.updated_at!)}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </main>
+
+      {/* Edit Note Dialog */}
+      {editingNote && (
+        <EditNoteDialog
+          note={editingNote}
+          courses={courses}
+          onClose={() => setEditingNote(null)}
+        />
+      )}
     </div>
   );
 };
