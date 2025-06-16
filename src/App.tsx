@@ -9,6 +9,7 @@ import Dashboard from "./pages/Dashboard";
 import Courses from "./pages/Courses";
 import CoursePage from "./pages/CoursePage";
 import Notebook from "./pages/Notebook";
+import NoteEditor from "./pages/NoteEditor";
 import Planner from "./pages/Planner";
 import Upload from "./pages/Upload";
 import Auth from "./pages/Auth";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/courses/:courseId" element={<CoursePage />} />
             <Route path="/courses/:courseId/assignments/:assignmentId" element={<AssignmentPage />} />
             <Route path="/notebook" element={<Notebook />} />
+            <Route path="/notebook/note/:noteId" element={<NoteEditor />} />
             <Route path="/planner" element={<Planner />} />
             <Route path="/upload" element={<Upload />} />
             <Route path="/ai-tutor" element={<AITutor />} />

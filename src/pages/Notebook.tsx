@@ -1,9 +1,9 @@
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { 
   BookOpen, 
@@ -20,7 +20,6 @@ import Navigation from "@/components/Navigation";
 import UserMenu from "@/components/UserMenu";
 import { useNotes } from "@/hooks/useNotes";
 import { useCourses } from "@/hooks/useCourses";
-import CreateNoteDialog from "@/components/CreateNoteDialog";
 import EditNoteDialog from "@/components/EditNoteDialog";
 import {
   AlertDialog,
@@ -35,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const Notebook = () => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [selectedCourseId, setSelectedCourseId] = useState<string | null>(null);
@@ -87,6 +87,14 @@ const Notebook = () => {
     });
   };
 
+  const handleCreateNote = () => {
+    navigate("/notebook/note/new");
+  };
+
+  const handleEditNote = (noteId: string) => {
+    navigate(`/notebook/note/${noteId}`);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex">
@@ -111,7 +119,10 @@ const Notebook = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-semibold text-gray-900">Knowledge Notebook</h1>
             <div className="flex items-center space-x-4">
-              <CreateNoteDialog courses={courses} />
+              <Button onClick={handleCreateNote}>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Note
+              </Button>
               <UserMenu />
             </div>
           </div>
@@ -184,12 +195,17 @@ const Notebook = () => {
                   : "Try adjusting your search terms or filters."
                 }
               </p>
-              {notes.length === 0 && <CreateNoteDialog courses={courses} />}
+              {notes.length === 0 && (
+                <Button onClick={handleCreateNote}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create Note
+                </Button>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredNotes.map((note) => (
-                <Card key={note.id} className="hover:shadow-lg transition-shadow">
+                <Card key={note.id} className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => handleEditNote(note.id)}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -202,14 +218,7 @@ const Notebook = () => {
                           </p>
                         )}
                       </div>
-                      <div className="flex items-center space-x-1 ml-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setEditingNote(note)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
+                      <div className="flex items-center space-x-1 ml-2" onClick={(e) => e.stopPropagation()}>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
@@ -262,7 +271,10 @@ const Notebook = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => generateSummary(note.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          generateSummary(note.id);
+                        }}
                         disabled={isGeneratingSummary}
                         className="w-full"
                       >

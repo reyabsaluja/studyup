@@ -60,13 +60,21 @@ export const useNotes = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       toast.success('Note created successfully!');
+      // Handle callback if provided
+      if (context?.onSuccess) {
+        context.onSuccess(data);
+      }
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
       console.error('Error creating note:', error);
       toast.error('Failed to create note');
+      // Handle callback if provided
+      if (context?.onError) {
+        context.onError(error);
+      }
     },
   });
 
@@ -82,13 +90,21 @@ export const useNotes = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data, variables, context) => {
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       toast.success('Note updated successfully!');
+      // Handle callback if provided
+      if (context?.onSuccess) {
+        context.onSuccess(data);
+      }
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
       console.error('Error updating note:', error);
       toast.error('Failed to update note');
+      // Handle callback if provided
+      if (context?.onError) {
+        context.onError(error);
+      }
     },
   });
 
@@ -145,12 +161,21 @@ export const useNotes = () => {
     },
   });
 
+  // Enhanced create and update functions that accept callbacks
+  const createNote = (noteData: Omit<NoteInsert, 'user_id'>, callbacks?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
+    createNoteMutation.mutate(noteData, callbacks);
+  };
+
+  const updateNote = (noteData: Partial<Note> & { id: string }, callbacks?: { onSuccess?: (data: any) => void; onError?: (error: any) => void }) => {
+    updateNoteMutation.mutate(noteData, callbacks);
+  };
+
   return {
     notes,
     isLoading,
     error,
-    createNote: createNoteMutation.mutate,
-    updateNote: updateNoteMutation.mutate,
+    createNote,
+    updateNote,
     deleteNote: deleteNoteMutation.mutate,
     generateSummary: generateSummaryMutation.mutate,
     isCreating: createNoteMutation.isPending,
