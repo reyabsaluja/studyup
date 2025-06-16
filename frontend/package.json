@@ -1,20 +1,15 @@
 {
-  "name": "study-up",
-  "version": "1.0.0",
+  "name": "vite_react_shadcn_ts",
   "private": true,
-  "description": "StudyUp: Academic Planner & AI Tutor",
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "dev": "cd frontend && npm run dev",
-    "build": "cd frontend && npm run build",
-    "lint": "cd frontend && npm run lint",
-    "preview": "cd frontend && npm run preview",
-    "install:frontend": "cd frontend && npm install",
-    "install:all": "npm run install:frontend"
+    "dev": "vite --config config/vite.config.ts",
+    "build": "vite build --config config/vite.config.ts",
+    "build:dev": "vite build --mode development --config config/vite.config.ts",
+    "lint": "eslint . --config config/eslint.config.js",
+    "preview": "vite preview --config config/vite.config.ts"
   },
-  "workspaces": [
-    "frontend"
-  ]
-}
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
