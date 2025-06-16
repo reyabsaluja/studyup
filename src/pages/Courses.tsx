@@ -1,14 +1,26 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Calendar, FileText, Users, Brain, Loader2, MessageSquare } from "lucide-react";
+import { BookOpen, Calendar, FileText, Users, Brain, Loader2, MessageSquare, Trash2 } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import UserMenu from "@/components/UserMenu";
 import AddCourseDialog from "@/components/AddCourseDialog";
 import { useCourses } from "@/hooks/useCourses";
 import { useNavigate } from "react-router-dom";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const Courses = () => {
-  const { courses, isLoading, createCourse, isCreating } = useCourses();
+  const { courses, isLoading, createCourse, deleteCourse, isCreating, isDeleting } = useCourses();
   const navigate = useNavigate();
 
   const handleAddCourse = (courseData: {
@@ -18,6 +30,10 @@ const Courses = () => {
     color: string;
   }) => {
     createCourse(courseData);
+  };
+
+  const handleDeleteCourse = (courseId: string) => {
+    deleteCourse(courseId);
   };
 
   const handleAskAI = (courseId: string, courseName: string) => {
@@ -95,6 +111,36 @@ const Courses = () => {
                           <p className="text-sm text-gray-500">{course.code}</p>
                         </div>
                       </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            onClick={(e) => e.stopPropagation()}
+                            disabled={isDeleting}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Course</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{course.name}"? This action cannot be undone and will also delete all associated assignments and materials.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleDeleteCourse(course.id)}
+                              className="bg-red-600 hover:bg-red-700"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                     
                     {/* Progress Bar */}
