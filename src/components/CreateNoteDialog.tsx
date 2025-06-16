@@ -35,7 +35,7 @@ const CreateNoteDialog = ({ courses }: CreateNoteDialogProps) => {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
-  const [courseId, setCourseId] = useState<string>("");
+  const [courseId, setCourseId] = useState<string>("no-course");
   const [tagsInput, setTagsInput] = useState("");
 
   const { createNote, isCreating } = useNotes();
@@ -53,14 +53,14 @@ const CreateNoteDialog = ({ courses }: CreateNoteDialogProps) => {
     createNote({
       title: title.trim(),
       content: content.trim() || null,
-      course_id: courseId || null,
+      course_id: courseId === "no-course" ? null : courseId,
       tags: tags.length > 0 ? tags : null,
     });
 
     // Reset form
     setTitle("");
     setContent("");
-    setCourseId("");
+    setCourseId("no-course");
     setTagsInput("");
     setOpen(false);
   };
@@ -100,6 +100,7 @@ const CreateNoteDialog = ({ courses }: CreateNoteDialogProps) => {
                   <SelectValue placeholder="Select a course..." />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="no-course">No course</SelectItem>
                   {courses.map((course) => (
                     <SelectItem key={course.id} value={course.id}>
                       {course.name} ({course.code})

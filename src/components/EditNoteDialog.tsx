@@ -41,7 +41,7 @@ interface EditNoteDialogProps {
 const EditNoteDialog = ({ note, courses, onClose }: EditNoteDialogProps) => {
   const [title, setTitle] = useState(note.title);
   const [content, setContent] = useState(note.content || "");
-  const [courseId, setCourseId] = useState(note.course_id || "");
+  const [courseId, setCourseId] = useState(note.course_id || "no-course");
   const [tagsInput, setTagsInput] = useState(note.tags?.join(", ") || "");
 
   const { updateNote, isUpdating } = useNotes();
@@ -60,7 +60,7 @@ const EditNoteDialog = ({ note, courses, onClose }: EditNoteDialogProps) => {
       id: note.id,
       title: title.trim(),
       content: content.trim() || null,
-      course_id: courseId || null,
+      course_id: courseId === "no-course" ? null : courseId,
       tags: tags.length > 0 ? tags : null,
     });
 
@@ -96,7 +96,7 @@ const EditNoteDialog = ({ note, courses, onClose }: EditNoteDialogProps) => {
                   <SelectValue placeholder="Select a course..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No course</SelectItem>
+                  <SelectItem value="no-course">No course</SelectItem>
                   {courses.map((course) => (
                     <SelectItem key={course.id} value={course.id}>
                       {course.name} ({course.code})
