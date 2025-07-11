@@ -1,5 +1,5 @@
 <div align="center">
-  <img alt="Logo" src="studyup-logo.svg" width="100" />
+  <img alt="Logo" src="studyup-logo (1).svg" width="100" />
   <h1><strong>StudyUp</strong></h1>
   <p>All-in-one AI-powered academic workspace that organizes your semester generates personalized study plans using full context.</p>
 </div>
