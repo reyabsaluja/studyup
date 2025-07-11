@@ -80,8 +80,6 @@ supabase functions deploy chat-with-gemini
 supabase functions deploy generate-study-plan
 ```
 
-#### Deployed @ [https://study-up.lovable.app/)
-
 ## 🌐 Browser Compatibility
 
 Supported on:
